@@ -8,6 +8,7 @@ from ai_coach import AICoach
 from monte_carlo import MonteCarloSimulator
 from analytics import Analytics
 from card_visuals import CardRenderer, create_table_background
+from user_management import UserManager
 import time
 
 # Initialize session state
@@ -428,10 +429,12 @@ elif page == "Performance Analytics":
     else:
         st.info("No performance data available yet. Play some hands to see your analytics!")
         
-        # Initialize tracking
+        # Initialize tracking with username
+        username = st.text_input("Enter your username:", value="guest", key="username_input")
         if st.button("Start Performance Tracking"):
-            analytics.initialize_tracking()
-            st.success("Performance tracking initialized!")
+            analytics.initialize_tracking(username)
+            st.success(f"Performance tracking initialized for {username}!")
+            st.rerun()
 
 # Footer
 st.markdown("---")

@@ -3,9 +3,11 @@ import numpy as np
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 import json
+from database import DatabaseManager
 
 class Analytics:
     def __init__(self):
+        self.db = DatabaseManager()
         self.session_data = []
         self.performance_history = []
         self.decision_log = []
@@ -18,17 +20,42 @@ class Analytics:
             'results': []
         }
         self.tracking_active = False
+        self.current_player_id = None
+        self.current_session_id = None
     
-    def initialize_tracking(self):
+    def initialize_tracking(self, username: str = "guest"):
         """Initialize performance tracking"""
-        self.tracking_active = True
-        self.current_session = {
-            'start_time': datetime.now(),
-            'hands_played': 0,
-            'decisions': [],
-            'counts': [],
-            'results': []
-        }
+        try:
+            # Get or create player
+            player = self.db.get_player(username)
+            if not player:
+                player = self.db.create_player(username)
+            
+            self.current_player_id = player.id
+            
+            # Start new game session
+            game_session = self.db.start_game_session(player.id)
+            self.current_session_id = game_session.id
+            
+            self.tracking_active = True
+            self.current_session = {
+                'start_time': datetime.now(),
+                'hands_played': 0,
+                'decisions': [],
+                'counts': [],
+                'results': []
+            }
+        except Exception as e:
+            print(f"Database initialization error: {e}")
+            # Fallback to in-memory tracking
+            self.tracking_active = True
+            self.current_session = {
+                'start_time': datetime.now(),
+                'hands_played': 0,
+                'decisions': [],
+                'counts': [],
+                'results': []
+            }
     
     def log_decision(self, situation: Dict, action_taken: str, correct_action: str, 
                     outcome: str, true_count: float = 0):
@@ -50,6 +77,13 @@ class Analytics:
             'true_count': true_count,
             'hand_number': self.current_session['hands_played']
         }
+        
+        # Log to database if available
+        if self.current_player_id and self.current_session_id:
+            try:
+                self.db.log_player_decision(self.current_player_id, self.current_session_id, decision_entry)
+            except Exception as e:
+                print(f"Database logging error: {e}")
         
         self.decision_log.append(decision_entry)
         self.current_session['decisions'].append(decision_entry)
