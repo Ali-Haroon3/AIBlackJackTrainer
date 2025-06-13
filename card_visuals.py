@@ -11,7 +11,7 @@ class CardRenderer:
         self.card_height = 168
         self.corner_radius = 12
         
-        # Card mapping for external images
+        # Card mapping for nicubunu.ro images
         self.card_mapping = {
             # Hearts
             ('2', 'Hearts'): 'hearts_2.svg',
