@@ -4,14 +4,14 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 import pickle
 import os
-from strategy_tables import BasicStrategy
+from bja_strategy import BJABasicStrategy
 from card_counting import CardCounter
 from collections import defaultdict
 import json
 
 class EnhancedAICoach:
     def __init__(self):
-        self.basic_strategy = BasicStrategy()
+        self.basic_strategy = BJABasicStrategy()
         self.card_counter = CardCounter()
         self.ml_model = None
         self.training_data = []
@@ -103,16 +103,15 @@ class EnhancedAICoach:
     
     def _get_basic_strategy_action(self, player_total: int, dealer_upcard: int, 
                                   is_soft: bool, can_double: bool, can_split: bool) -> str:
-        """Get basic strategy action"""
-        if can_split and player_total % 2 == 0:
-            pair_value = player_total // 2
-            if pair_value <= 10:
-                return self.basic_strategy.get_pair_action(pair_value, dealer_upcard)
-        
-        if is_soft:
-            return self.basic_strategy.get_soft_action(player_total, dealer_upcard, can_double)
-        else:
-            return self.basic_strategy.get_hard_action(player_total, dealer_upcard, can_double)
+        """Get basic strategy action using BJA chart"""
+        return self.basic_strategy.get_action(
+            player_total=player_total,
+            dealer_upcard=dealer_upcard,
+            is_soft=is_soft,
+            is_pair=can_split,
+            can_double=can_double,
+            can_surrender=False
+        )
     
     def _adjust_for_count(self, action: str, true_count: float, player_total: int, dealer_upcard: int) -> str:
         """Adjust action based on true count"""
