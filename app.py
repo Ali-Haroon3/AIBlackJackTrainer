@@ -9,6 +9,7 @@ from enhanced_ai_coach import EnhancedAICoach
 from monte_carlo import MonteCarloSimulator
 from analytics import Analytics
 from card_visuals import CardRenderer, create_table_background
+from blackjack_table import BlackjackTable
 from user_management import UserManager
 import time
 
@@ -29,6 +30,8 @@ if 'monte_carlo' not in st.session_state:
     st.session_state.monte_carlo = MonteCarloSimulator()
 if 'card_renderer' not in st.session_state:
     st.session_state.card_renderer = CardRenderer()
+if 'blackjack_table' not in st.session_state:
+    st.session_state.blackjack_table = BlackjackTable()
 if 'user_manager' not in st.session_state:
     st.session_state.user_manager = UserManager()
 
