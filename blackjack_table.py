@@ -13,70 +13,74 @@ class BlackjackTable:
         self.card_width = 80
         self.card_height = 112
         
-        # Card mapping for local files
+        # Card mapping for nicubunu.ro simple deck format
         self.card_mapping = {
-            ('A', 'Hearts'): 'hearts_ace.svg',
-            ('2', 'Hearts'): 'hearts_2.svg',
-            ('3', 'Hearts'): 'hearts_3.svg',
-            ('4', 'Hearts'): 'hearts_4.svg',
-            ('5', 'Hearts'): 'hearts_5.svg',
-            ('6', 'Hearts'): 'hearts_6.svg',
-            ('7', 'Hearts'): 'hearts_7.svg',
-            ('8', 'Hearts'): 'hearts_8.svg',
-            ('9', 'Hearts'): 'hearts_9.svg',
-            ('10', 'Hearts'): 'hearts_10.svg',
-            ('J', 'Hearts'): 'hearts_jack.svg',
-            ('Q', 'Hearts'): 'hearts_queen.svg',
-            ('K', 'Hearts'): 'hearts_king.svg',
+            # Hearts (h)
+            ('2', 'Hearts'): 'simple_h_2.svg',
+            ('3', 'Hearts'): 'simple_h_3.svg',
+            ('4', 'Hearts'): 'simple_h_4.svg',
+            ('5', 'Hearts'): 'simple_h_5.svg',
+            ('6', 'Hearts'): 'simple_h_6.svg',
+            ('7', 'Hearts'): 'simple_h_7.svg',
+            ('8', 'Hearts'): 'simple_h_8.svg',
+            ('9', 'Hearts'): 'simple_h_9.svg',
+            ('10', 'Hearts'): 'simple_h_10.svg',
+            ('J', 'Hearts'): 'simple_h_j.svg',
+            ('Q', 'Hearts'): 'simple_h_q.svg',
+            ('K', 'Hearts'): 'simple_h_k.svg',
+            ('A', 'Hearts'): 'simple_h_a.svg',
             
-            ('A', 'Diamonds'): 'diamonds_ace.svg',
-            ('2', 'Diamonds'): 'diamonds_2.svg',
-            ('3', 'Diamonds'): 'diamonds_3.svg',
-            ('4', 'Diamonds'): 'diamonds_4.svg',
-            ('5', 'Diamonds'): 'diamonds_5.svg',
-            ('6', 'Diamonds'): 'diamonds_6.svg',
-            ('7', 'Diamonds'): 'diamonds_7.svg',
-            ('8', 'Diamonds'): 'diamonds_8.svg',
-            ('9', 'Diamonds'): 'diamonds_9.svg',
-            ('10', 'Diamonds'): 'diamonds_10.svg',
-            ('J', 'Diamonds'): 'diamonds_jack.svg',
-            ('Q', 'Diamonds'): 'diamonds_queen.svg',
-            ('K', 'Diamonds'): 'diamonds_king.svg',
+            # Diamonds (d)
+            ('2', 'Diamonds'): 'simple_d_2.svg',
+            ('3', 'Diamonds'): 'simple_d_3.svg',
+            ('4', 'Diamonds'): 'simple_d_4.svg',
+            ('5', 'Diamonds'): 'simple_d_5.svg',
+            ('6', 'Diamonds'): 'simple_d_6.svg',
+            ('7', 'Diamonds'): 'simple_d_7.svg',
+            ('8', 'Diamonds'): 'simple_d_8.svg',
+            ('9', 'Diamonds'): 'simple_d_9.svg',
+            ('10', 'Diamonds'): 'simple_d_10.svg',
+            ('J', 'Diamonds'): 'simple_d_j.svg',
+            ('Q', 'Diamonds'): 'simple_d_q.svg',
+            ('K', 'Diamonds'): 'simple_d_k.svg',
+            ('A', 'Diamonds'): 'simple_d_a.svg',
             
-            ('A', 'Clubs'): 'clubs_ace.svg',
-            ('2', 'Clubs'): 'clubs_2.svg',
-            ('3', 'Clubs'): 'clubs_3.svg',
-            ('4', 'Clubs'): 'clubs_4.svg',
-            ('5', 'Clubs'): 'clubs_5.svg',
-            ('6', 'Clubs'): 'clubs_6.svg',
-            ('7', 'Clubs'): 'clubs_7.svg',
-            ('8', 'Clubs'): 'clubs_8.svg',
-            ('9', 'Clubs'): 'clubs_9.svg',
-            ('10', 'Clubs'): 'clubs_10.svg',
-            ('J', 'Clubs'): 'clubs_jack.svg',
-            ('Q', 'Clubs'): 'clubs_queen.svg',
-            ('K', 'Clubs'): 'clubs_king.svg',
+            # Clubs (c)
+            ('2', 'Clubs'): 'simple_c_2.svg',
+            ('3', 'Clubs'): 'simple_c_3.svg',
+            ('4', 'Clubs'): 'simple_c_4.svg',
+            ('5', 'Clubs'): 'simple_c_5.svg',
+            ('6', 'Clubs'): 'simple_c_6.svg',
+            ('7', 'Clubs'): 'simple_c_7.svg',
+            ('8', 'Clubs'): 'simple_c_8.svg',
+            ('9', 'Clubs'): 'simple_c_9.svg',
+            ('10', 'Clubs'): 'simple_c_10.svg',
+            ('J', 'Clubs'): 'simple_c_j.svg',
+            ('Q', 'Clubs'): 'simple_c_q.svg',
+            ('K', 'Clubs'): 'simple_c_k.svg',
+            ('A', 'Clubs'): 'simple_c_a.svg',
             
-            ('A', 'Spades'): 'spades_ace.svg',
-            ('2', 'Spades'): 'spades_2.svg',
-            ('3', 'Spades'): 'spades_3.svg',
-            ('4', 'Spades'): 'spades_4.svg',
-            ('5', 'Spades'): 'spades_5.svg',
-            ('6', 'Spades'): 'spades_6.svg',
-            ('7', 'Spades'): 'spades_7.svg',
-            ('8', 'Spades'): 'spades_8.svg',
-            ('9', 'Spades'): 'spades_9.svg',
-            ('10', 'Spades'): 'spades_10.svg',
-            ('J', 'Spades'): 'spades_jack.svg',
-            ('Q', 'Spades'): 'spades_queen.svg',
-            ('K', 'Spades'): 'spades_king.svg',
+            # Spades (s)
+            ('2', 'Spades'): 'simple_s_2.svg',
+            ('3', 'Spades'): 'simple_s_3.svg',
+            ('4', 'Spades'): 'simple_s_4.svg',
+            ('5', 'Spades'): 'simple_s_5.svg',
+            ('6', 'Spades'): 'simple_s_6.svg',
+            ('7', 'Spades'): 'simple_s_7.svg',
+            ('8', 'Spades'): 'simple_s_8.svg',
+            ('9', 'Spades'): 'simple_s_9.svg',
+            ('10', 'Spades'): 'simple_s_10.svg',
+            ('J', 'Spades'): 'simple_s_j.svg',
+            ('Q', 'Spades'): 'simple_s_q.svg',
+            ('K', 'Spades'): 'simple_s_k.svg',
+            ('A', 'Spades'): 'simple_s_a.svg',
         }
     
     def get_card_image(self, rank, suit):
         """Get card image, fallback to generated if file not found"""
         card_key = (rank, suit)
         if card_key in self.card_mapping:
-            card_file = f"card_images/{self.card_mapping[card_key]}"
+            card_file = f"card_images/simple/{self.card_mapping[card_key]}"
             if os.path.exists(card_file):
                 try:
                     with open(card_file, 'rb') as f:
@@ -243,26 +247,34 @@ class BlackjackTable:
     
     def get_card_back(self):
         """Get card back image"""
-        back_file = "card_images/back.svg"
-        if os.path.exists(back_file):
-            try:
-                with open(back_file, 'rb') as f:
-                    return f"data:image/svg+xml;base64,{base64.b64encode(f.read()).decode()}"
-            except:
-                pass
+        # Check for nicubunu card back variations
+        back_files = [
+            "card_images/simple/simple_jk_b.svg",  # Blue joker back
+            "card_images/simple/simple_jk_r.svg",  # Red joker back
+            "card_images/back.svg"                 # Generic back
+        ]
         
-        # Fallback card back
-        img = Image.new('RGB', (self.card_width, self.card_height), '#000080')
+        for back_file in back_files:
+            if os.path.exists(back_file):
+                try:
+                    with open(back_file, 'rb') as f:
+                        return f"data:image/svg+xml;base64,{base64.b64encode(f.read()).decode()}"
+                except:
+                    continue
+        
+        # Fallback card back with casino-style design
+        img = Image.new('RGB', (self.card_width, self.card_height), '#0F4A9C')
         draw = ImageDraw.Draw(img)
         
         # Draw border
         draw.rectangle([0, 0, self.card_width-1, self.card_height-1], outline='white', width=2)
+        draw.rectangle([3, 3, self.card_width-4, self.card_height-4], outline='gold', width=1)
         
-        # Draw pattern
-        for i in range(0, self.card_width, 20):
-            for j in range(0, self.card_height, 20):
-                if (i + j) % 40 == 0:
-                    draw.ellipse((i+5, j+5, i+15, j+15), fill='white')
+        # Draw diamond pattern
+        for i in range(10, self.card_width-10, 15):
+            for j in range(10, self.card_height-10, 15):
+                if (i + j) % 30 == 0:
+                    draw.polygon([(i, j-5), (i+5, j), (i, j+5), (i-5, j)], fill='white', outline='gold')
         
         buffer = io.BytesIO()
         img.save(buffer, format='PNG')

@@ -3,7 +3,6 @@ import os
 import requests
 import base64
 import io
-import tarfile, pathlib, os
 from typing import Dict, Tuple
 
 class CardRenderer:
@@ -12,67 +11,67 @@ class CardRenderer:
         self.card_height = 168
         self.corner_radius = 12
         
-        # Card mapping for nicubunu.ro images
+        # Card mapping for nicubunu.ro simple deck format
         self.card_mapping = {
-            # Hearts
-            ('2', 'Hearts'): 'hearts_2.svg',
-            ('3', 'Hearts'): 'hearts_3.svg',
-            ('4', 'Hearts'): 'hearts_4.svg',
-            ('5', 'Hearts'): 'hearts_5.svg',
-            ('6', 'Hearts'): 'hearts_6.svg',
-            ('7', 'Hearts'): 'hearts_7.svg',
-            ('8', 'Hearts'): 'hearts_8.svg',
-            ('9', 'Hearts'): 'hearts_9.svg',
-            ('10', 'Hearts'): 'hearts_10.svg',
-            ('J', 'Hearts'): 'hearts_jack.svg',
-            ('Q', 'Hearts'): 'hearts_queen.svg',
-            ('K', 'Hearts'): 'hearts_king.svg',
-            ('A', 'Hearts'): 'hearts_ace.svg',
+            # Hearts (h)
+            ('2', 'Hearts'): 'simple_h_2.svg',
+            ('3', 'Hearts'): 'simple_h_3.svg',
+            ('4', 'Hearts'): 'simple_h_4.svg',
+            ('5', 'Hearts'): 'simple_h_5.svg',
+            ('6', 'Hearts'): 'simple_h_6.svg',
+            ('7', 'Hearts'): 'simple_h_7.svg',
+            ('8', 'Hearts'): 'simple_h_8.svg',
+            ('9', 'Hearts'): 'simple_h_9.svg',
+            ('10', 'Hearts'): 'simple_h_10.svg',
+            ('J', 'Hearts'): 'simple_h_j.svg',
+            ('Q', 'Hearts'): 'simple_h_q.svg',
+            ('K', 'Hearts'): 'simple_h_k.svg',
+            ('A', 'Hearts'): 'simple_h_a.svg',
             
-            # Diamonds
-            ('2', 'Diamonds'): 'diamonds_2.svg',
-            ('3', 'Diamonds'): 'diamonds_3.svg',
-            ('4', 'Diamonds'): 'diamonds_4.svg',
-            ('5', 'Diamonds'): 'diamonds_5.svg',
-            ('6', 'Diamonds'): 'diamonds_6.svg',
-            ('7', 'Diamonds'): 'diamonds_7.svg',
-            ('8', 'Diamonds'): 'diamonds_8.svg',
-            ('9', 'Diamonds'): 'diamonds_9.svg',
-            ('10', 'Diamonds'): 'diamonds_10.svg',
-            ('J', 'Diamonds'): 'diamonds_jack.svg',
-            ('Q', 'Diamonds'): 'diamonds_queen.svg',
-            ('K', 'Diamonds'): 'diamonds_king.svg',
-            ('A', 'Diamonds'): 'diamonds_ace.svg',
+            # Diamonds (d)
+            ('2', 'Diamonds'): 'simple_d_2.svg',
+            ('3', 'Diamonds'): 'simple_d_3.svg',
+            ('4', 'Diamonds'): 'simple_d_4.svg',
+            ('5', 'Diamonds'): 'simple_d_5.svg',
+            ('6', 'Diamonds'): 'simple_d_6.svg',
+            ('7', 'Diamonds'): 'simple_d_7.svg',
+            ('8', 'Diamonds'): 'simple_d_8.svg',
+            ('9', 'Diamonds'): 'simple_d_9.svg',
+            ('10', 'Diamonds'): 'simple_d_10.svg',
+            ('J', 'Diamonds'): 'simple_d_j.svg',
+            ('Q', 'Diamonds'): 'simple_d_q.svg',
+            ('K', 'Diamonds'): 'simple_d_k.svg',
+            ('A', 'Diamonds'): 'simple_d_a.svg',
             
-            # Clubs
-            ('2', 'Clubs'): 'clubs_2.svg',
-            ('3', 'Clubs'): 'clubs_3.svg',
-            ('4', 'Clubs'): 'clubs_4.svg',
-            ('5', 'Clubs'): 'clubs_5.svg',
-            ('6', 'Clubs'): 'clubs_6.svg',
-            ('7', 'Clubs'): 'clubs_7.svg',
-            ('8', 'Clubs'): 'clubs_8.svg',
-            ('9', 'Clubs'): 'clubs_9.svg',
-            ('10', 'Clubs'): 'clubs_10.svg',
-            ('J', 'Clubs'): 'clubs_jack.svg',
-            ('Q', 'Clubs'): 'clubs_queen.svg',
-            ('K', 'Clubs'): 'clubs_king.svg',
-            ('A', 'Clubs'): 'clubs_ace.svg',
+            # Clubs (c)
+            ('2', 'Clubs'): 'simple_c_2.svg',
+            ('3', 'Clubs'): 'simple_c_3.svg',
+            ('4', 'Clubs'): 'simple_c_4.svg',
+            ('5', 'Clubs'): 'simple_c_5.svg',
+            ('6', 'Clubs'): 'simple_c_6.svg',
+            ('7', 'Clubs'): 'simple_c_7.svg',
+            ('8', 'Clubs'): 'simple_c_8.svg',
+            ('9', 'Clubs'): 'simple_c_9.svg',
+            ('10', 'Clubs'): 'simple_c_10.svg',
+            ('J', 'Clubs'): 'simple_c_j.svg',
+            ('Q', 'Clubs'): 'simple_c_q.svg',
+            ('K', 'Clubs'): 'simple_c_k.svg',
+            ('A', 'Clubs'): 'simple_c_a.svg',
             
-            # Spades
-            ('2', 'Spades'): 'spades_2.svg',
-            ('3', 'Spades'): 'spades_3.svg',
-            ('4', 'Spades'): 'spades_4.svg',
-            ('5', 'Spades'): 'spades_5.svg',
-            ('6', 'Spades'): 'spades_6.svg',
-            ('7', 'Spades'): 'spades_7.svg',
-            ('8', 'Spades'): 'spades_8.svg',
-            ('9', 'Spades'): 'spades_9.svg',
-            ('10', 'Spades'): 'spades_10.svg',
-            ('J', 'Spades'): 'spades_jack.svg',
-            ('Q', 'Spades'): 'spades_queen.svg',
-            ('K', 'Spades'): 'spades_king.svg',
-            ('A', 'Spades'): 'spades_ace.svg',
+            # Spades (s)
+            ('2', 'Spades'): 'simple_s_2.svg',
+            ('3', 'Spades'): 'simple_s_3.svg',
+            ('4', 'Spades'): 'simple_s_4.svg',
+            ('5', 'Spades'): 'simple_s_5.svg',
+            ('6', 'Spades'): 'simple_s_6.svg',
+            ('7', 'Spades'): 'simple_s_7.svg',
+            ('8', 'Spades'): 'simple_s_8.svg',
+            ('9', 'Spades'): 'simple_s_9.svg',
+            ('10', 'Spades'): 'simple_s_10.svg',
+            ('J', 'Spades'): 'simple_s_j.svg',
+            ('Q', 'Spades'): 'simple_s_q.svg',
+            ('K', 'Spades'): 'simple_s_k.svg',
+            ('A', 'Spades'): 'simple_s_a.svg',
         }
         
         # Base URL for the card images
@@ -203,32 +202,27 @@ class CardRenderer:
     def get_card_image_base64(self, rank: str, suit: str) -> str:
         """Get card image as base64 string for embedding in HTML"""
         try:
-            # Try to get external card image first
+            # Try to load local SVG file first
             card_key = (rank, suit)
             if card_key in self.card_mapping:
                 card_filename = self.card_mapping[card_key]
-                card_url = f"{self.base_url}{card_filename}"
+                local_path = f"card_images/simple/{card_filename}"
                 
-                # Generate locally instead of using external URLs for reliability
-                img = self.create_card_image(rank, suit)
-                
-                # Convert to base64
-                buffer = io.BytesIO()
-                img.save(buffer, format='PNG')
-                img_str = base64.b64encode(buffer.getvalue()).decode()
-                return f"data:image/png;base64,{img_str}"
+                if os.path.exists(local_path):
+                    with open(local_path, 'rb') as f:
+                        svg_content = f.read()
+                        svg_b64 = base64.b64encode(svg_content).decode()
+                        return f"data:image/svg+xml;base64,{svg_b64}"
             
             # Fallback to generated card image
             img = self.create_card_image(rank, suit)
-            
-            # Convert to base64
             buffer = io.BytesIO()
             img.save(buffer, format='PNG')
             img_str = base64.b64encode(buffer.getvalue()).decode()
-            
             return f"data:image/png;base64,{img_str}"
+            
         except Exception as e:
-            # Fallback to generated image on any error
+            # Final fallback to generated image
             img = self.create_card_image(rank, suit)
             buffer = io.BytesIO()
             img.save(buffer, format='PNG')
