@@ -208,8 +208,14 @@ class CardRenderer:
                 card_filename = self.card_mapping[card_key]
                 card_url = f"{self.base_url}{card_filename}"
                 
-                # Return direct URL for external images
-                return card_url
+                # Generate locally instead of using external URLs for reliability
+                img = self.create_card_image(rank, suit)
+                
+                # Convert to base64
+                buffer = io.BytesIO()
+                img.save(buffer, format='PNG')
+                img_str = base64.b64encode(buffer.getvalue()).decode()
+                return f"data:image/png;base64,{img_str}"
             
             # Fallback to generated card image
             img = self.create_card_image(rank, suit)

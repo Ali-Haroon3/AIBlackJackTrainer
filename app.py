@@ -431,62 +431,20 @@ elif page == "Strategy Analysis":
     tab1, tab2, tab3 = st.tabs(["Basic Strategy", "Card Counting", "Advanced Strategies"])
     
     with tab1:
-        st.subheader("BJA Basic Strategy Chart")
+        # Import the chart renderer
+        from bja_charts import BJAChartRenderer
+        chart_renderer = BJAChartRenderer()
         
-        # Create visual representation of the BJA strategy chart
-        st.markdown("### Hard Totals")
-        hard_data = []
-        dealer_cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'A']
+        # Create tabs for S17 and H17 variants
+        s17_tab, h17_tab = st.tabs(["S17 Strategy", "H17 Strategy"])
         
-        # Hard totals from 8-17
-        for total in range(8, 18):
-            row = [str(total)]
-            for dealer in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]:
-                action = st.session_state.coach.basic_strategy.get_action(total, dealer, False, False, True, False)
-                action_display = action.upper()[0] if action else 'H'
-                row.append(action_display)
-            hard_data.append(row)
-        
-        hard_df = pd.DataFrame(hard_data, columns=['Total'] + dealer_cards)
-        st.dataframe(hard_df, use_container_width=True)
-        
-        st.markdown("### Soft Totals")
-        soft_data = []
-        
-        # Soft totals A,2 through A,9
-        for soft_total in range(13, 21):
-            row = [f"A,{soft_total-11}"]
-            for dealer in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]:
-                action = st.session_state.coach.basic_strategy.get_action(soft_total, dealer, True, False, True, False)
-                action_display = action.upper()[0] if action else 'H'
-                row.append(action_display)
-            soft_data.append(row)
-        
-        soft_df = pd.DataFrame(soft_data, columns=['Hand'] + dealer_cards)
-        st.dataframe(soft_df, use_container_width=True)
-        
-        st.markdown("### Pair Splitting")
-        pair_data = []
-        
-        # Pairs from 2,2 through A,A
-        pairs = ['2,2', '3,3', '4,4', '5,5', '6,6', '7,7', '8,8', '9,9', '10,10', 'A,A']
-        for i, pair in enumerate(pairs):
-            pair_value = i + 2 if i < 9 else 11
-            row = [pair]
-            for dealer in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]:
-                action = st.session_state.coach.basic_strategy.get_action(pair_value * 2, dealer, False, True, True, False)
-                if 'split' in action.lower():
-                    action_display = 'Y'
-                else:
-                    action_display = 'N'
-                row.append(action_display)
-            pair_data.append(row)
-        
-        pair_df = pd.DataFrame(pair_data, columns=['Pair'] + dealer_cards)
-        st.dataframe(pair_df, use_container_width=True)
-        
-        # Add legend
-        st.markdown("**Legend:** H=Hit, S=Stand, D=Double, Y=Split, N=Don't Split")
+        with s17_tab:
+            chart_renderer.render_s17_charts()
+            chart_renderer.render_legend()
+            
+        with h17_tab:
+            chart_renderer.render_h17_charts()
+            chart_renderer.render_legend()
     
     with tab2:
         st.subheader("Card Counting Systems")
