@@ -183,7 +183,9 @@ if page == "Game Training":
                     st.caption(f"Win Probability: {recommendation['win_probability']:.1%}")
             
             # Card counting practice
-            if game.dealt_cards:
+            if hasattr(game, 'dealt_cards') and game.dealt_cards:
+                st.markdown("#### 🔢 Card Counting Practice")
+                
                 count_info = st.session_state.coach.get_count_info(
                     game.dealt_cards, 
                     st.session_state.show_count
@@ -197,7 +199,8 @@ if page == "Game Training":
                         min_value=-50, 
                         max_value=50, 
                         value=0,
-                        key="count_guess"
+                        key="count_guess",
+                        help="Enter your running count based on cards seen"
                     )
                 
                 with col2:
@@ -208,16 +211,47 @@ if page == "Game Training":
                         )
                         
                         if result['is_correct']:
-                            st.success(f"Correct! Running count: {result['actual_count']}")
+                            st.success(f"✓ Correct! Running count: {result['actual_count']}")
                         else:
-                            st.error(f"Incorrect. Actual: {result['actual_count']}, Your guess: {result['player_guess']}")
+                            st.error(f"✗ Incorrect. Actual: {result['actual_count']}, Your guess: {result['player_guess']}")
+                        
+                        # Log this counting attempt for analysis
+                        current_user = st.session_state.user_manager.get_current_user()
+                        if current_user:
+                            situation = {
+                                'cards_seen': len(game.dealt_cards),
+                                'actual_count': result['actual_count'],
+                                'system': result['system']
+                            }
+                            st.session_state.coach.log_player_decision(
+                                situation, str(player_guess), str(result['actual_count']), 
+                                "correct" if result['is_correct'] else "incorrect"
+                            )
                 
                 with col3:
                     if st.session_state.show_count:
                         st.metric("Running Count", count_info.get('running_count', 0))
                         st.metric("True Count", f"{count_info.get('true_count', 0):.1f}")
+                        
+                        # Show additional counting info
+                        if count_info.get('betting_advantage'):
+                            advantage = count_info['betting_advantage']
+                            if advantage > 0:
+                                st.info(f"Player advantage: +{advantage:.1%}")
+                            else:
+                                st.warning(f"House advantage: {advantage:.1%}")
                     else:
                         st.info("Hidden - use 'Show Count'")
+                        st.caption("Practice counting without seeing the actual values")
+                
+                # Show count values for selected system
+                with st.expander("📚 Count Values Reference"):
+                    count_values = st.session_state.coach.get_count_values(st.session_state.counting_system)
+                    cols = st.columns(4)
+                    for i, (card, value) in enumerate(count_values.items()):
+                        with cols[i % 4]:
+                            color = "green" if value > 0 else "red" if value < 0 else "gray"
+                            st.markdown(f"**{card}**: <span style='color:{color}'>{value:+d}</span>", unsafe_allow_html=True)
             
             # Player actions
             if game.can_player_act():
@@ -226,21 +260,73 @@ if page == "Game Training":
                 
                 with col_hit:
                     if st.button("👆 Hit", type="secondary", use_container_width=True):
+                        # Log the decision for AI coach analysis
+                        current_hand = game.player_hand[0] if game.player_hand else None
+                        dealer_upcard = game.dealer_hand.cards[0] if game.dealer_hand.cards else None
+                        
+                        if current_hand and dealer_upcard:
+                            # Get correct action for comparison
+                            recommendation = st.session_state.coach.get_recommendation([current_hand], dealer_upcard, show_advice=True)
+                            situation = {
+                                'player_total': current_hand.get_value(),
+                                'dealer_upcard': dealer_upcard.get_value(),
+                                'is_soft': current_hand.is_soft(),
+                                'can_double': len(current_hand.cards) == 2,
+                                'can_split': current_hand.can_split()
+                            }
+                            st.session_state.coach.log_player_decision(
+                                situation, "Hit", recommendation['basic_strategy'], "pending"
+                            )
+                        
                         game.player_hit()
-                        st.session_state.show_advice = False  # Hide advice after action
+                        st.session_state.show_advice = False
                         st.rerun()
                 
                 with col_stand:
                     if st.button("✋ Stand", type="secondary", use_container_width=True):
+                        # Log the decision for AI coach analysis
+                        current_hand = game.player_hand[0] if game.player_hand else None
+                        dealer_upcard = game.dealer_hand.cards[0] if game.dealer_hand.cards else None
+                        
+                        if current_hand and dealer_upcard:
+                            recommendation = st.session_state.coach.get_recommendation([current_hand], dealer_upcard, show_advice=True)
+                            situation = {
+                                'player_total': current_hand.get_value(),
+                                'dealer_upcard': dealer_upcard.get_value(),
+                                'is_soft': current_hand.is_soft(),
+                                'can_double': len(current_hand.cards) == 2,
+                                'can_split': current_hand.can_split()
+                            }
+                            st.session_state.coach.log_player_decision(
+                                situation, "Stand", recommendation['basic_strategy'], "pending"
+                            )
+                        
                         game.player_stand()
-                        st.session_state.show_advice = False  # Hide advice after action
+                        st.session_state.show_advice = False
                         st.rerun()
                 
                 with col_double:
                     if game.can_double_down():
                         if st.button("⬆️ Double", type="secondary", use_container_width=True):
+                            # Log the decision for AI coach analysis
+                            current_hand = game.player_hand[0] if game.player_hand else None
+                            dealer_upcard = game.dealer_hand.cards[0] if game.dealer_hand.cards else None
+                            
+                            if current_hand and dealer_upcard:
+                                recommendation = st.session_state.coach.get_recommendation([current_hand], dealer_upcard, show_advice=True)
+                                situation = {
+                                    'player_total': current_hand.get_value(),
+                                    'dealer_upcard': dealer_upcard.get_value(),
+                                    'is_soft': current_hand.is_soft(),
+                                    'can_double': True,
+                                    'can_split': current_hand.can_split()
+                                }
+                                st.session_state.coach.log_player_decision(
+                                    situation, "Double", recommendation['basic_strategy'], "pending"
+                                )
+                            
                             game.double_down()
-                            st.session_state.show_advice = False  # Hide advice after action
+                            st.session_state.show_advice = False
                             st.rerun()
                     else:
                         st.button("⬆️ Double", disabled=True, use_container_width=True)
@@ -248,8 +334,25 @@ if page == "Game Training":
                 with col_split:
                     if game.can_split():
                         if st.button("↔️ Split", type="secondary", use_container_width=True):
+                            # Log the decision for AI coach analysis
+                            current_hand = game.player_hand[0] if game.player_hand else None
+                            dealer_upcard = game.dealer_hand.cards[0] if game.dealer_hand.cards else None
+                            
+                            if current_hand and dealer_upcard:
+                                recommendation = st.session_state.coach.get_recommendation([current_hand], dealer_upcard, show_advice=True)
+                                situation = {
+                                    'player_total': current_hand.get_value(),
+                                    'dealer_upcard': dealer_upcard.get_value(),
+                                    'is_soft': current_hand.is_soft(),
+                                    'can_double': len(current_hand.cards) == 2,
+                                    'can_split': True
+                                }
+                                st.session_state.coach.log_player_decision(
+                                    situation, "Split", recommendation['basic_strategy'], "pending"
+                                )
+                            
                             game.split_hand()
-                            st.session_state.show_advice = False  # Hide advice after action
+                            st.session_state.show_advice = False
                             st.rerun()
                     else:
                         st.button("↔️ Split", disabled=True, use_container_width=True)
