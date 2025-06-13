@@ -201,9 +201,10 @@ if page == "Game Training":
                         dealer_upcard
                     )
                     
-                    st.info(f"**Recommended Action:** {recommendation['action']}")
-                    st.write(f"**Reason:** {recommendation['reason']}")
-                    st.write(f"**Win Probability:** {recommendation['win_probability']:.1%}")
+                    if recommendation:
+                        st.info(f"**Recommended Action:** {recommendation['action']}")
+                        st.write(f"**Reason:** {recommendation['reason']}")
+                        st.write(f"**Win Probability:** {recommendation['win_probability']:.1%}")
                     
                     # Card counting information
                     if game.cards_dealt > 0:

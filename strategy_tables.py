@@ -36,7 +36,7 @@ class BasicStrategy:
             21: {2: 'stand', 3: 'stand', 4: 'stand', 5: 'stand', 6: 'stand', 7: 'stand', 8: 'stand', 9: 'stand', 10: 'stand', 11: 'stand'},
         }
         
-        # Soft totals strategy (A,2 = 13, A,3 = 14, etc.)
+        # Professional soft totals strategy (A,2 = 13, A,3 = 14, etc.)
         self.soft_strategy = {
             # A,2 (soft 13): Double vs 5-6, otherwise hit
             13: {2: 'hit', 3: 'hit', 4: 'hit', 5: 'double', 6: 'double', 7: 'hit', 8: 'hit', 9: 'hit', 10: 'hit', 11: 'hit'},
