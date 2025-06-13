@@ -1,5 +1,8 @@
 from PIL import Image, ImageDraw, ImageFont
 import os
+import requests
+import base64
+import io
 from typing import Dict, Tuple
 
 class CardRenderer:
@@ -7,6 +10,72 @@ class CardRenderer:
         self.card_width = 120
         self.card_height = 168
         self.corner_radius = 12
+        
+        # Card mapping for external images
+        self.card_mapping = {
+            # Hearts
+            ('2', 'Hearts'): 'hearts_2.svg',
+            ('3', 'Hearts'): 'hearts_3.svg',
+            ('4', 'Hearts'): 'hearts_4.svg',
+            ('5', 'Hearts'): 'hearts_5.svg',
+            ('6', 'Hearts'): 'hearts_6.svg',
+            ('7', 'Hearts'): 'hearts_7.svg',
+            ('8', 'Hearts'): 'hearts_8.svg',
+            ('9', 'Hearts'): 'hearts_9.svg',
+            ('10', 'Hearts'): 'hearts_10.svg',
+            ('J', 'Hearts'): 'hearts_jack.svg',
+            ('Q', 'Hearts'): 'hearts_queen.svg',
+            ('K', 'Hearts'): 'hearts_king.svg',
+            ('A', 'Hearts'): 'hearts_ace.svg',
+            
+            # Diamonds
+            ('2', 'Diamonds'): 'diamonds_2.svg',
+            ('3', 'Diamonds'): 'diamonds_3.svg',
+            ('4', 'Diamonds'): 'diamonds_4.svg',
+            ('5', 'Diamonds'): 'diamonds_5.svg',
+            ('6', 'Diamonds'): 'diamonds_6.svg',
+            ('7', 'Diamonds'): 'diamonds_7.svg',
+            ('8', 'Diamonds'): 'diamonds_8.svg',
+            ('9', 'Diamonds'): 'diamonds_9.svg',
+            ('10', 'Diamonds'): 'diamonds_10.svg',
+            ('J', 'Diamonds'): 'diamonds_jack.svg',
+            ('Q', 'Diamonds'): 'diamonds_queen.svg',
+            ('K', 'Diamonds'): 'diamonds_king.svg',
+            ('A', 'Diamonds'): 'diamonds_ace.svg',
+            
+            # Clubs
+            ('2', 'Clubs'): 'clubs_2.svg',
+            ('3', 'Clubs'): 'clubs_3.svg',
+            ('4', 'Clubs'): 'clubs_4.svg',
+            ('5', 'Clubs'): 'clubs_5.svg',
+            ('6', 'Clubs'): 'clubs_6.svg',
+            ('7', 'Clubs'): 'clubs_7.svg',
+            ('8', 'Clubs'): 'clubs_8.svg',
+            ('9', 'Clubs'): 'clubs_9.svg',
+            ('10', 'Clubs'): 'clubs_10.svg',
+            ('J', 'Clubs'): 'clubs_jack.svg',
+            ('Q', 'Clubs'): 'clubs_queen.svg',
+            ('K', 'Clubs'): 'clubs_king.svg',
+            ('A', 'Clubs'): 'clubs_ace.svg',
+            
+            # Spades
+            ('2', 'Spades'): 'spades_2.svg',
+            ('3', 'Spades'): 'spades_3.svg',
+            ('4', 'Spades'): 'spades_4.svg',
+            ('5', 'Spades'): 'spades_5.svg',
+            ('6', 'Spades'): 'spades_6.svg',
+            ('7', 'Spades'): 'spades_7.svg',
+            ('8', 'Spades'): 'spades_8.svg',
+            ('9', 'Spades'): 'spades_9.svg',
+            ('10', 'Spades'): 'spades_10.svg',
+            ('J', 'Spades'): 'spades_jack.svg',
+            ('Q', 'Spades'): 'spades_queen.svg',
+            ('K', 'Spades'): 'spades_king.svg',
+            ('A', 'Spades'): 'spades_ace.svg',
+        }
+        
+        # Base URL for the card images
+        self.base_url = "https://nicubunu.ro/graphics/playingcards/simple/"
         
         # Card colors
         self.colors = {
@@ -132,17 +201,32 @@ class CardRenderer:
     
     def get_card_image_base64(self, rank: str, suit: str) -> str:
         """Get card image as base64 string for embedding in HTML"""
-        import base64
-        import io
-        
-        img = self.create_card_image(rank, suit)
-        
-        # Convert to base64
-        buffer = io.BytesIO()
-        img.save(buffer, format='PNG')
-        img_str = base64.b64encode(buffer.getvalue()).decode()
-        
-        return f"data:image/png;base64,{img_str}"
+        try:
+            # Try to get external card image first
+            card_key = (rank, suit)
+            if card_key in self.card_mapping:
+                card_filename = self.card_mapping[card_key]
+                card_url = f"{self.base_url}{card_filename}"
+                
+                # Return direct URL for external images
+                return card_url
+            
+            # Fallback to generated card image
+            img = self.create_card_image(rank, suit)
+            
+            # Convert to base64
+            buffer = io.BytesIO()
+            img.save(buffer, format='PNG')
+            img_str = base64.b64encode(buffer.getvalue()).decode()
+            
+            return f"data:image/png;base64,{img_str}"
+        except Exception as e:
+            # Fallback to generated image on any error
+            img = self.create_card_image(rank, suit)
+            buffer = io.BytesIO()
+            img.save(buffer, format='PNG')
+            img_str = base64.b64encode(buffer.getvalue()).decode()
+            return f"data:image/png;base64,{img_str}"
     
     def get_card_back_base64(self) -> str:
         """Get card back image as base64 string"""

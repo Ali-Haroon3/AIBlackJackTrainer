@@ -4,7 +4,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from game_engine import BlackjackGame
-from ai_coach import AICoach
+from enhanced_ai_coach import EnhancedAICoach
 from monte_carlo import MonteCarloSimulator
 from analytics import Analytics
 from card_visuals import CardRenderer, create_table_background
@@ -15,7 +15,13 @@ import time
 if 'game' not in st.session_state:
     st.session_state.game = BlackjackGame()
 if 'coach' not in st.session_state:
-    st.session_state.coach = AICoach()
+    st.session_state.coach = EnhancedAICoach()
+if 'show_advice' not in st.session_state:
+    st.session_state.show_advice = False
+if 'show_count' not in st.session_state:
+    st.session_state.show_count = False
+if 'counting_system' not in st.session_state:
+    st.session_state.counting_system = 'Hi-Lo'
 if 'analytics' not in st.session_state:
     st.session_state.analytics = Analytics()
 if 'monte_carlo' not in st.session_state:
@@ -135,6 +141,83 @@ if page == "Game Training":
                 elif hand.is_blackjack():
                     st.markdown("<p style='text-align: center; color: #44ff44; font-weight: bold; font-size: 16px;'>BLACKJACK! 🎉</p>", unsafe_allow_html=True)
             
+            # AI Coach and Card Counting Section
+            st.markdown("### 🤖 AI Coach & Card Counting")
+            
+            # Counting system selection
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                counting_system = st.selectbox(
+                    "Counting System:",
+                    ['Hi-Lo', 'KO', 'Hi-Opt I', 'Hi-Opt II', 'Omega II'],
+                    index=['Hi-Lo', 'KO', 'Hi-Opt I', 'Hi-Opt II', 'Omega II'].index(st.session_state.counting_system)
+                )
+                if counting_system != st.session_state.counting_system:
+                    st.session_state.counting_system = counting_system
+                    st.session_state.coach.set_counting_system(counting_system)
+                    st.rerun()
+            
+            with col2:
+                if st.button("Get Hint", use_container_width=True):
+                    st.session_state.show_advice = True
+                    st.rerun()
+            
+            with col3:
+                if st.button("Show Count", use_container_width=True):
+                    st.session_state.show_count = True
+                    st.rerun()
+            
+            # Display AI recommendation if requested
+            if st.session_state.show_advice and game.can_player_act():
+                current_hand = game.player_hand[game.current_hand_index] if hasattr(game, 'current_hand_index') else game.player_hand[0]
+                dealer_upcard = game.dealer_hand.cards[0] if game.dealer_hand.cards else None
+                
+                if dealer_upcard:
+                    recommendation = st.session_state.coach.get_recommendation(
+                        [current_hand], dealer_upcard, show_advice=True
+                    )
+                    
+                    st.info(f"**AI Recommendation:** {recommendation['action']}")
+                    st.caption(f"Reason: {recommendation['reason']}")
+                    st.caption(f"Win Probability: {recommendation['win_probability']:.1%}")
+            
+            # Card counting practice
+            if game.dealt_cards:
+                count_info = st.session_state.coach.get_count_info(
+                    game.dealt_cards, 
+                    st.session_state.show_count
+                )
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    player_guess = st.number_input(
+                        "Your count guess:", 
+                        min_value=-50, 
+                        max_value=50, 
+                        value=0,
+                        key="count_guess"
+                    )
+                
+                with col2:
+                    if st.button("Check Count", use_container_width=True):
+                        result = st.session_state.coach.test_counting_knowledge(
+                            game.dealt_cards, 
+                            player_guess
+                        )
+                        
+                        if result['is_correct']:
+                            st.success(f"Correct! Running count: {result['actual_count']}")
+                        else:
+                            st.error(f"Incorrect. Actual: {result['actual_count']}, Your guess: {result['player_guess']}")
+                
+                with col3:
+                    if st.session_state.show_count:
+                        st.metric("Running Count", count_info.get('running_count', 0))
+                        st.metric("True Count", f"{count_info.get('true_count', 0):.1f}")
+                    else:
+                        st.info("Hidden - use 'Show Count'")
+            
             # Player actions
             if game.can_player_act():
                 st.markdown("### 🎯 Choose Your Action")
@@ -143,17 +226,20 @@ if page == "Game Training":
                 with col_hit:
                     if st.button("👆 Hit", type="secondary", use_container_width=True):
                         game.player_hit()
+                        st.session_state.show_advice = False  # Hide advice after action
                         st.rerun()
                 
                 with col_stand:
                     if st.button("✋ Stand", type="secondary", use_container_width=True):
                         game.player_stand()
+                        st.session_state.show_advice = False  # Hide advice after action
                         st.rerun()
                 
                 with col_double:
                     if game.can_double_down():
                         if st.button("⬆️ Double", type="secondary", use_container_width=True):
                             game.double_down()
+                            st.session_state.show_advice = False  # Hide advice after action
                             st.rerun()
                     else:
                         st.button("⬆️ Double", disabled=True, use_container_width=True)
@@ -162,6 +248,7 @@ if page == "Game Training":
                     if game.can_split():
                         if st.button("↔️ Split", type="secondary", use_container_width=True):
                             game.split_hand()
+                            st.session_state.show_advice = False  # Hide advice after action
                             st.rerun()
                     else:
                         st.button("↔️ Split", disabled=True, use_container_width=True)
@@ -188,6 +275,8 @@ if page == "Game Training":
                 
                 if st.button("🔄 New Hand", type="primary", use_container_width=True):
                     game.reset_hand()
+                    st.session_state.show_advice = False  # Reset advice for new hand
+                    st.session_state.show_count = False   # Reset count for new hand
                     st.rerun()
         
         st.markdown("</div>", unsafe_allow_html=True)

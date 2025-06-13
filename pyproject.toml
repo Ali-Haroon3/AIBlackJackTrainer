@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
+    "anthropic>=0.54.0",
     "beautifulsoup4>=4.13.4",
     "numpy>=2.3.0",
     "pandas>=2.3.0",
