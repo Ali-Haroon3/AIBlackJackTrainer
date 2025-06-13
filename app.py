@@ -22,6 +22,8 @@ if 'monte_carlo' not in st.session_state:
     st.session_state.monte_carlo = MonteCarloSimulator()
 if 'card_renderer' not in st.session_state:
     st.session_state.card_renderer = CardRenderer()
+if 'user_manager' not in st.session_state:
+    st.session_state.user_manager = UserManager()
 
 st.set_page_config(
     page_title="Blackjack AI Training",
@@ -31,13 +33,16 @@ st.set_page_config(
 
 st.title("🃏 Blackjack AI Training & Strategy Optimization")
 
-# Sidebar for navigation
+# Sidebar for navigation and user management
+st.session_state.user_manager.render_login_form()
+
 st.sidebar.title("Navigation")
 page = st.sidebar.selectbox("Choose a section:", [
     "Game Training", 
     "Strategy Analysis", 
     "Monte Carlo Simulation", 
-    "Performance Analytics"
+    "Performance Analytics",
+    "Player Dashboard"
 ])
 
 # Main content based on selected page
@@ -430,11 +435,79 @@ elif page == "Performance Analytics":
         st.info("No performance data available yet. Play some hands to see your analytics!")
         
         # Initialize tracking with username
-        username = st.text_input("Enter your username:", value="guest", key="username_input")
-        if st.button("Start Performance Tracking"):
-            analytics.initialize_tracking(username)
-            st.success(f"Performance tracking initialized for {username}!")
-            st.rerun()
+        current_user = st.session_state.user_manager.get_current_user()
+        if current_user:
+            if st.button("Start Performance Tracking"):
+                analytics.initialize_tracking(current_user)
+                st.success(f"Performance tracking initialized for {current_user}!")
+                st.rerun()
+        else:
+            st.info("Please log in to track your performance data.")
+
+elif page == "Player Dashboard":
+    st.header("Player Dashboard")
+    
+    current_user = st.session_state.user_manager.get_current_user()
+    
+    if current_user:
+        st.subheader(f"Welcome back, {current_user}!")
+        
+        # Get player statistics
+        player_stats = st.session_state.user_manager.get_player_stats(current_user)
+        
+        if player_stats:
+            # Overall statistics
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("Total Sessions", player_stats.get('total_sessions', 0))
+            with col2:
+                st.metric("Total Hands", player_stats.get('total_hands', 0))
+            with col3:
+                st.metric("Net Profit", f"${player_stats.get('net_profit', 0):.2f}")
+            with col4:
+                st.metric("Skill Level", player_stats.get('skill_level', 'Beginner'))
+            
+            # Performance metrics
+            st.subheader("Performance Metrics")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Average Win Rate", f"{player_stats.get('average_win_rate', 0):.1%}")
+            with col2:
+                st.metric("House Edge", f"{player_stats.get('average_house_edge', 0):.3%}")
+            with col3:
+                st.metric("Decision Accuracy", f"{player_stats.get('average_decision_accuracy', 0):.1%}")
+            
+            # Session history
+            st.subheader("Recent Sessions")
+            session_history = st.session_state.user_manager.get_session_history(current_user, 10)
+            
+            if session_history:
+                session_df = pd.DataFrame(session_history)
+                session_df['start_time'] = pd.to_datetime(session_df['start_time'])
+                session_df = session_df.sort_values('start_time', ascending=False)
+                
+                # Display as table
+                st.dataframe(session_df[['start_time', 'hands_played', 'net_result', 'win_rate', 'decision_accuracy']], 
+                           use_container_width=True)
+                
+                # Performance trend chart
+                if len(session_df) > 1:
+                    st.subheader("Performance Trend")
+                    
+                    fig_trend = px.line(session_df, 
+                                      x='start_time', 
+                                      y='net_result',
+                                      title="Net Result Over Time")
+                    st.plotly_chart(fig_trend, use_container_width=True)
+            else:
+                st.info("No session history available yet.")
+        else:
+            st.info("No player statistics available. Start playing to build your profile!")
+    else:
+        st.info("Please log in to view your dashboard.")
 
 # Footer
 st.markdown("---")
