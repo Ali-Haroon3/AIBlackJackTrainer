@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import json
 from game_engine import BlackjackGame
 from enhanced_ai_coach import EnhancedAICoach
 from monte_carlo import MonteCarloSimulator
@@ -448,90 +449,92 @@ elif page == "Monte Carlo Simulation":
                 st.info(insight)
 
 elif page == "Performance Analytics":
-    st.header("Training Performance Analytics")
+    st.header("📊 AI Coach Analysis")
     
-    analytics = st.session_state.analytics
+    current_user = st.session_state.user_manager.get_current_user()
     
-    # Load historical data
-    performance_data = analytics.get_performance_data()
-    
-    if len(performance_data) > 0:
-        tab1, tab2, tab3 = st.tabs(["Skill Progression", "Decision Analysis", "Counting Accuracy"])
+    if current_user:
+        player_analysis = st.session_state.coach.get_player_analysis()
         
-        with tab1:
-            st.subheader("Skill Development Over Time")
-            
-            # Win rate progression
-            fig_winrate = px.line(
-                performance_data, 
-                x='session_date', 
-                y='win_rate',
-                title="Win Rate Progression"
-            )
-            st.plotly_chart(fig_winrate, use_container_width=True)
-            
-            # House edge reduction
-            fig_house_edge = px.line(
-                performance_data,
-                x='session_date',
-                y='house_edge',
-                title="House Edge Reduction Over Time"
-            )
-            st.plotly_chart(fig_house_edge, use_container_width=True)
+        # Performance metrics
+        col1, col2, col3, col4 = st.columns(4)
         
-        with tab2:
-            st.subheader("Decision Making Analysis")
-            
-            decision_accuracy = analytics.get_decision_accuracy()
-            
-            fig_decisions = px.bar(
-                x=list(decision_accuracy.keys()),
-                y=list(decision_accuracy.values()),
-                title="Decision Accuracy by Action Type"
-            )
-            st.plotly_chart(fig_decisions, use_container_width=True)
-            
-            # Common mistakes
-            st.subheader("Most Common Mistakes")
-            mistakes = analytics.get_common_mistakes()
-            for i, mistake in enumerate(mistakes[:5], 1):
-                st.write(f"{i}. {mistake['situation']}: {mistake['incorrect_action']} → {mistake['correct_action']} ({mistake['frequency']} times)")
+        with col1:
+            st.metric("Decision Accuracy", f"{player_analysis['overall_accuracy']:.1%}")
+        with col2:
+            st.metric("Total Decisions", player_analysis['total_decisions'])
+        with col3:
+            st.metric("Counting Accuracy", f"{player_analysis['counting_accuracy']:.1%}")
+        with col4:
+            correct_ratio = player_analysis['correct_decisions'] / max(1, player_analysis['total_decisions'])
+            st.metric("Correct Actions", f"{correct_ratio:.1%}")
         
-        with tab3:
-            st.subheader("Card Counting Accuracy")
+        # Strengths and weaknesses analysis
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("🎯 Your Strengths")
+            if player_analysis['strengths']:
+                for strength in player_analysis['strengths']:
+                    st.success(f"✓ {strength}")
+            else:
+                st.info("Play more hands to identify your strengths")
+        
+        with col2:
+            st.subheader("📈 Areas to Improve")
+            if player_analysis['weaknesses']:
+                for weakness in player_analysis['weaknesses']:
+                    st.warning(f"⚠ {weakness}")
+            else:
+                st.success("No major weaknesses found - great job!")
+        
+        # Personalized recommendations from AI coach
+        if player_analysis['recommendations']:
+            st.subheader("🤖 AI Coach Recommendations")
+            for i, rec in enumerate(player_analysis['recommendations'], 1):
+                st.info(f"{i}. {rec}")
+        
+        # Mistake patterns analysis
+        if player_analysis['mistake_patterns']:
+            st.subheader("🔍 Common Mistake Patterns")
+            mistake_data = []
+            for situation, count in player_analysis['mistake_patterns'].items():
+                mistake_data.append({'Situation': situation.replace('_', ' vs '), 'Mistakes': count})
             
-            counting_data = analytics.get_counting_accuracy()
+            if mistake_data:
+                mistake_df = pd.DataFrame(mistake_data)
+                st.dataframe(mistake_df, use_container_width=True)
+        
+        # Card counting progress
+        if st.session_state.coach.counting_accuracy_history:
+            st.subheader("📈 Card Counting Progress")
+            counting_history = st.session_state.coach.counting_accuracy_history[-20:]  # Last 20 attempts
             
-            if len(counting_data) > 0:
-                fig_counting = px.line(
-                    counting_data,
-                    x='hand_number',
-                    y='accuracy',
-                    title="Card Counting Accuracy Over Session"
-                )
-                st.plotly_chart(fig_counting, use_container_width=True)
-                
-                # Accuracy by count level
-                accuracy_by_count = analytics.get_accuracy_by_count_level()
-                fig_count_accuracy = px.bar(
-                    x=list(accuracy_by_count.keys()),
-                    y=list(accuracy_by_count.values()),
-                    title="Counting Accuracy by True Count Level"
-                )
-                st.plotly_chart(fig_count_accuracy, use_container_width=True)
-    
+            fig = px.line(
+                x=range(len(counting_history)), 
+                y=[1 if correct else 0 for correct in counting_history],
+                title="Card Counting Accuracy Over Time",
+                labels={'x': 'Attempt Number', 'y': 'Correct (1) / Incorrect (0)'}
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+        # Export session data
+        if st.button("Export Performance Data"):
+            export_data = {
+                'player_analysis': player_analysis,
+                'counting_history': st.session_state.coach.counting_accuracy_history,
+                'session_data': st.session_state.coach.current_session,
+                'counting_system': st.session_state.counting_system
+            }
+            
+            st.download_button(
+                label="Download Analysis Report",
+                data=json.dumps(export_data, indent=2),
+                file_name=f"blackjack_analysis_{current_user}.json",
+                mime="application/json"
+            )
     else:
-        st.info("No performance data available yet. Play some hands to see your analytics!")
-        
-        # Initialize tracking with username
-        current_user = st.session_state.user_manager.get_current_user()
-        if current_user:
-            if st.button("Start Performance Tracking"):
-                analytics.initialize_tracking(current_user)
-                st.success(f"Performance tracking initialized for {current_user}!")
-                st.rerun()
-        else:
-            st.info("Please log in to track your performance data.")
+        st.info("Please log in to view your AI coach analysis.")
 
 elif page == "Player Dashboard":
     st.header("Player Dashboard")

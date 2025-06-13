@@ -166,60 +166,71 @@ class EnhancedAICoach:
         if not player_hands:
             return {'action': 'Hit', 'reason': 'No valid hand', 'win_probability': 0.5, 'show_advice': show_advice}
         
-        current_hand = player_hands[0] if isinstance(player_hands, list) else player_hands
-        player_total = current_hand.get_value() if hasattr(current_hand, 'get_value') else 17
-        dealer_value = dealer_upcard.get_value() if hasattr(dealer_upcard, 'get_value') else 10
-        
-        is_soft = current_hand.is_soft() if hasattr(current_hand, 'is_soft') else False
-        can_double = len(current_hand.cards) == 2 if hasattr(current_hand, 'cards') else False
-        can_split = current_hand.can_split() if hasattr(current_hand, 'can_split') else False
-        
-        true_count = 0
-        
-        features = np.array([[
-            player_total,
-            dealer_value,
-            int(is_soft),
-            int(can_double),
-            int(can_split),
-            true_count,
-            abs(true_count),
-            1 if true_count > 0 else 0,
-        ]])
-        
-        if self.ml_model:
-            try:
-                prediction = self.ml_model.predict(features)[0]
-                probabilities = self.ml_model.predict_proba(features)[0]
-                action = self._decode_action(prediction)
-                confidence = np.max(probabilities)
-            except:
+        try:
+            current_hand = player_hands[0] if isinstance(player_hands, list) else player_hands
+            player_total = current_hand.get_value() if hasattr(current_hand, 'get_value') else 17
+            dealer_value = dealer_upcard.get_value() if hasattr(dealer_upcard, 'get_value') else 10
+            
+            is_soft = current_hand.is_soft() if hasattr(current_hand, 'is_soft') else False
+            can_double = len(current_hand.cards) == 2 if hasattr(current_hand, 'cards') else False
+            can_split = current_hand.can_split() if hasattr(current_hand, 'can_split') else False
+            
+            true_count = 0
+            
+            features = np.array([[
+                player_total,
+                dealer_value,
+                int(is_soft),
+                int(can_double),
+                int(can_split),
+                true_count,
+                abs(true_count),
+                1 if true_count > 0 else 0,
+            ]])
+            
+            if self.ml_model:
+                try:
+                    prediction = self.ml_model.predict(features)[0]
+                    probabilities = self.ml_model.predict_proba(features)[0]
+                    action = self._decode_action(prediction)
+                    confidence = np.max(probabilities)
+                except:
+                    action = 'Hit'
+                    confidence = 0.5
+            else:
                 action = 'Hit'
                 confidence = 0.5
-        else:
-            action = 'Hit'
-            confidence = 0.5
-        
-        basic_action = self._get_basic_strategy_action(
-            player_total, dealer_value, is_soft, can_double, can_split
-        )
-        
-        win_probability = self._estimate_win_probability(
-            player_total, dealer_value, action, true_count
-        )
-        
-        reason = self._generate_reasoning(
-            action, basic_action, player_total, dealer_value, true_count, confidence
-        ) if show_advice else "Click 'Get Hint' for advice"
-        
-        return {
-            'action': action if show_advice else "Hidden",
-            'reason': reason,
-            'win_probability': win_probability,
-            'confidence': confidence,
-            'basic_strategy': basic_action,
-            'show_advice': show_advice
-        }
+            
+            basic_action = self._get_basic_strategy_action(
+                player_total, dealer_value, is_soft, can_double, can_split
+            )
+            
+            win_probability = self._estimate_win_probability(
+                player_total, dealer_value, action, true_count
+            )
+            
+            reason = self._generate_reasoning(
+                action, basic_action, player_total, dealer_value, true_count, confidence
+            ) if show_advice else "Click 'Get Hint' for advice"
+            
+            return {
+                'action': action if show_advice else "Hidden",
+                'reason': reason,
+                'win_probability': win_probability,
+                'confidence': confidence,
+                'basic_strategy': basic_action,
+                'show_advice': show_advice
+            }
+        except Exception as e:
+            # Fallback for any errors
+            return {
+                'action': 'Hit' if show_advice else "Hidden",
+                'reason': "Unable to analyze hand" if show_advice else "Click 'Get Hint' for advice",
+                'win_probability': 0.5,
+                'confidence': 0.5,
+                'basic_strategy': 'Hit',
+                'show_advice': show_advice
+            }
     
     def _estimate_win_probability(self, player_total: int, dealer_value: int, 
                                 action: str, true_count: float) -> float:
@@ -330,27 +341,38 @@ class EnhancedAICoach:
     
     def test_counting_knowledge(self, dealt_cards: List, player_guess: int) -> Dict:
         """Test player's card counting accuracy"""
-        actual_count = 0
-        system = self.current_session['counting_system']
-        
-        for card in dealt_cards:
-            actual_count += self.card_counter.count_card(card, system)
-        
-        is_correct = (player_guess == actual_count)
-        error = abs(player_guess - actual_count)
-        
-        count_test = {
-            'actual_count': actual_count,
-            'player_guess': player_guess,
-            'is_correct': is_correct,
-            'error': error,
-            'system': system
-        }
-        
-        self.current_session['counting_attempts'].append(count_test)
-        self.counting_accuracy_history.append(is_correct)
-        
-        return count_test
+        try:
+            actual_count = 0
+            system = self.current_session['counting_system']
+            
+            # Reset card counter and count all dealt cards
+            self.card_counter.reset_count()
+            for card in dealt_cards:
+                actual_count += self.card_counter.count_card(card, system)
+            
+            is_correct = (player_guess == actual_count)
+            error = abs(player_guess - actual_count)
+            
+            count_test = {
+                'actual_count': actual_count,
+                'player_guess': player_guess,
+                'is_correct': is_correct,
+                'error': error,
+                'system': system
+            }
+            
+            self.current_session['counting_attempts'].append(count_test)
+            self.counting_accuracy_history.append(is_correct)
+            
+            return count_test
+        except Exception as e:
+            return {
+                'actual_count': 0,
+                'player_guess': player_guess,
+                'is_correct': False,
+                'error': abs(player_guess),
+                'system': self.current_session.get('counting_system', 'Hi-Lo')
+            }
     
     def get_count_info(self, dealt_cards: List, show_count: bool = False) -> Dict:
         """Get card counting information"""
