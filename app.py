@@ -13,6 +13,9 @@ from blackjack_table import BlackjackTable
 from user_management import UserManager
 import time
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # Initialize session state
 if 'game' not in st.session_state:
     st.session_state.game = BlackjackGame()
