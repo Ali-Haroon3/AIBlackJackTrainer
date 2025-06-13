@@ -3,6 +3,7 @@ import os
 import requests
 import base64
 import io
+import tarfile, pathlib, os
 from typing import Dict, Tuple
 
 class CardRenderer:
