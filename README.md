@@ -15,49 +15,43 @@ A comprehensive Python-based blackjack training application with AI coaching, ca
 ## Installation
 
 ### Prerequisites
-
-- Python 3.8 or higher
-- PostgreSQL database (optional, uses SQLite fallback)
+- **Python 3.8+** (tested up to 3.13)  
+- **Git**  
+- **PostgreSQL 14+** (optional — the app falls back to SQLite if no `DATABASE_URL` is set)
 
 ### Setup Instructions
-
 1. **Clone the repository**
-```bash
-git clone https://github.com/yourusername/blackjack-ai-training.git
-cd blackjack-ai-training
-```
-
-2. **Install dependencies**
-```bash
-pip install streamlit pandas numpy plotly scikit-learn pillow requests sqlalchemy psycopg2-binary beautifulsoup4 trafilatura anthropic
-```
-
+    ```
+    git clone https://github.com/yourusername/blackjack-ai-training.git
+    cd blackjack-ai-training
+    ```
+2. **Create a virtual environment & install dependencies**
+    ```
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt            # pinned versions
+    ```
 3. **Run the application**
-```bash
-streamlit run app.py
-```
+    ```
+    python -m streamlit run app.py             # add --server.port 8501 if needed
+    ```
+4. **Access the application** — visit `http://localhost:8501` in your browser.
 
-4. **Access the application**
-Open your browser and navigate to `http://localhost:8501`
+4. **Access the application** — visit `http://localhost:8501` in your browser.
 
 ## Configuration
 
-### Database Setup (Optional)
+### Database Setup
+*SQLite (default demo mode)* – if `DATABASE_URL` is **not** set, the app creates `blackjack_training.db` in the project root.
 
-For production use with PostgreSQL:
+*PostgreSQL (production)*  
 
-1. Create a PostgreSQL database
-2. Set environment variables:
-```bash
 export DATABASE_URL="postgresql://username:password@localhost:5432/blackjack_training"
-export PGHOST="localhost"
-export PGPORT="5432"
-export PGDATABASE="blackjack_training"
-export PGUSER="username"
-export PGPASSWORD="password"
-```
+(createuser -s username && createdb blackjack_training -O username)
 
-### AI Features (Optional)
+Additional `PGHOST`, `PGPORT`, etc. are optional because the URL already encodes them.
+
+### AI Features (optional)
 
 For enhanced AI coaching capabilities:
 ```bash
