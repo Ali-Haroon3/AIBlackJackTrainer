@@ -7,6 +7,7 @@ from game_engine import BlackjackGame
 from ai_coach import AICoach
 from monte_carlo import MonteCarloSimulator
 from analytics import Analytics
+from card_visuals import CardRenderer, create_table_background
 import time
 
 # Initialize session state
@@ -18,6 +19,8 @@ if 'analytics' not in st.session_state:
     st.session_state.analytics = Analytics()
 if 'monte_carlo' not in st.session_state:
     st.session_state.monte_carlo = MonteCarloSimulator()
+if 'card_renderer' not in st.session_state:
+    st.session_state.card_renderer = CardRenderer()
 
 st.set_page_config(
     page_title="Blackjack AI Training",
@@ -43,89 +46,176 @@ if page == "Game Training":
     col1, col2, col3 = st.columns([2, 1, 1])
     
     with col1:
-        st.subheader("Game Table")
+        st.subheader("🎰 Casino Table")
         
         # Display current game state
         game = st.session_state.game
+        card_renderer = st.session_state.card_renderer
+        
+        # Create blackjack table background
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #0d5d0d 0%, #1a8a1a 50%, #0d5d0d 100%);
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #ffd700;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin: 10px 0;
+        ">
+        """, unsafe_allow_html=True)
         
         # Game controls
         if not game.game_active:
-            st.write("**Start a new hand**")
-            bet_amount = st.slider("Bet Amount", min_value=10, max_value=500, value=50, step=10)
+            st.markdown("### 🎯 Place Your Bet")
+            bet_amount = st.slider("Bet Amount ($)", min_value=10, max_value=500, value=50, step=10)
             
-            if st.button("Deal Cards"):
-                game.new_hand(bet_amount)
-                st.rerun()
+            col_deal, col_space = st.columns([1, 2])
+            with col_deal:
+                if st.button("🃏 Deal Cards", type="primary"):
+                    game.new_hand(bet_amount)
+                    st.rerun()
         
         else:
-            # Display cards
-            st.write("**Dealer's Hand:**")
-            dealer_display = game.get_dealer_display()
-            st.write(f"Cards: {dealer_display['cards']} | Value: {dealer_display['value']}")
+            # Display dealer's hand
+            st.markdown("### 🎩 Dealer")
+            dealer_hand = game.dealer_hand_cards
+            dealer_cards_html = "<div style='display: flex; gap: 10px; justify-content: center; margin: 10px 0;'>"
             
-            st.write("**Your Hand:**")
-            player_display = game.get_player_display()
-            st.write(f"Cards: {player_display['cards']} | Value: {player_display['value']}")
+            if game.hand_complete:
+                # Show all dealer cards
+                for card in dealer_hand.cards:
+                    card_img = card_renderer.get_card_image_base64(card.rank, card.suit)
+                    dealer_cards_html += f"<img src='{card_img}' style='width: 80px; height: 112px; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.3);'>"
+                dealer_value = dealer_hand.get_value()
+                st.markdown(f"{dealer_cards_html}</div>", unsafe_allow_html=True)
+                st.markdown(f"<p style='text-align: center; font-size: 18px; color: white; font-weight: bold;'>Value: {dealer_value}</p>", unsafe_allow_html=True)
+            else:
+                # Show first card, hide second
+                if len(dealer_hand.cards) > 0:
+                    first_card = dealer_hand.cards[0]
+                    card_img = card_renderer.get_card_image_base64(first_card.rank, first_card.suit)
+                    dealer_cards_html += f"<img src='{card_img}' style='width: 80px; height: 112px; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.3);'>"
+                
+                # Hidden card
+                hidden_card_img = card_renderer.get_card_back_base64()
+                dealer_cards_html += f"<img src='{hidden_card_img}' style='width: 80px; height: 112px; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.3);'>"
+                
+                st.markdown(f"{dealer_cards_html}</div>", unsafe_allow_html=True)
+                st.markdown(f"<p style='text-align: center; font-size: 18px; color: white; font-weight: bold;'>Value: ?</p>", unsafe_allow_html=True)
+            
+            # Display player's hand(s)
+            st.markdown("### 🎲 Your Hand")
+            player_hands = game.player_hand
+            
+            for i, hand in enumerate(player_hands):
+                if len(player_hands) > 1:
+                    st.markdown(f"**Hand {i+1}:**")
+                
+                player_cards_html = "<div style='display: flex; gap: 10px; justify-content: center; margin: 10px 0;'>"
+                for card in hand.cards:
+                    card_img = card_renderer.get_card_image_base64(card.rank, card.suit)
+                    player_cards_html += f"<img src='{card_img}' style='width: 80px; height: 112px; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.3);'>"
+                
+                player_cards_html += "</div>"
+                st.markdown(player_cards_html, unsafe_allow_html=True)
+                
+                hand_value = hand.get_value()
+                soft_indicator = " (Soft)" if hand.is_soft() else ""
+                
+                st.markdown(f"<p style='text-align: center; font-size: 18px; color: white; font-weight: bold;'>Value: {hand_value}{soft_indicator}</p>", unsafe_allow_html=True)
+                
+                if hand.is_busted():
+                    st.markdown("<p style='text-align: center; color: #ff4444; font-weight: bold; font-size: 16px;'>BUST!</p>", unsafe_allow_html=True)
+                elif hand.is_blackjack():
+                    st.markdown("<p style='text-align: center; color: #44ff44; font-weight: bold; font-size: 16px;'>BLACKJACK! 🎉</p>", unsafe_allow_html=True)
             
             # Player actions
             if game.can_player_act():
+                st.markdown("### 🎯 Choose Your Action")
                 col_hit, col_stand, col_double, col_split = st.columns(4)
                 
                 with col_hit:
-                    if st.button("Hit"):
+                    if st.button("👆 Hit", type="secondary", use_container_width=True):
                         game.player_hit()
                         st.rerun()
                 
                 with col_stand:
-                    if st.button("Stand"):
+                    if st.button("✋ Stand", type="secondary", use_container_width=True):
                         game.player_stand()
                         st.rerun()
                 
                 with col_double:
                     if game.can_double_down():
-                        if st.button("Double Down"):
+                        if st.button("⬆️ Double", type="secondary", use_container_width=True):
                             game.double_down()
                             st.rerun()
+                    else:
+                        st.button("⬆️ Double", disabled=True, use_container_width=True)
                 
                 with col_split:
                     if game.can_split():
-                        if st.button("Split"):
+                        if st.button("↔️ Split", type="secondary", use_container_width=True):
                             game.split_hand()
                             st.rerun()
+                    else:
+                        st.button("↔️ Split", disabled=True, use_container_width=True)
             
             # Show result if hand is complete
             if game.hand_complete:
                 result = game.get_hand_result()
                 if result['win']:
-                    st.success(f"You won! {result['message']} (+${result['payout']})")
+                    st.markdown(f"""
+                    <div style='background: linear-gradient(135deg, #4CAF50, #45a049); padding: 15px; border-radius: 10px; margin: 10px 0; text-align: center;'>
+                        <h3 style='color: white; margin: 0;'>🎉 WINNER! 🎉</h3>
+                        <p style='color: white; margin: 5px 0; font-size: 16px;'>{result['message']}</p>
+                        <p style='color: #ffff88; margin: 0; font-size: 18px; font-weight: bold;'>+${result['payout']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
                 else:
-                    st.error(f"You lost. {result['message']} (-${game.current_bet})")
+                    st.markdown(f"""
+                    <div style='background: linear-gradient(135deg, #f44336, #d32f2f); padding: 15px; border-radius: 10px; margin: 10px 0; text-align: center;'>
+                        <h3 style='color: white; margin: 0;'>💸 House Wins</h3>
+                        <p style='color: white; margin: 5px 0; font-size: 16px;'>{result['message']}</p>
+                        <p style='color: #ffcccc; margin: 0; font-size: 18px; font-weight: bold;'>-${game.current_bet}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
-                if st.button("New Hand"):
+                if st.button("🔄 New Hand", type="primary", use_container_width=True):
                     game.reset_hand()
                     st.rerun()
+        
+        st.markdown("</div>", unsafe_allow_html=True)
     
     with col2:
         st.subheader("AI Coach")
         
         if game.game_active and game.can_player_act():
             # Get AI recommendation
-            recommendation = st.session_state.coach.get_recommendation(
-                game.player_hand[0], 
-                game.dealer_hand[0]
-            )
-            
-            st.info(f"**Recommended Action:** {recommendation['action']}")
-            st.write(f"**Reason:** {recommendation['reason']}")
-            st.write(f"**Win Probability:** {recommendation['win_probability']:.1%}")
-            
-            # Card counting information
-            if game.cards_dealt > 0:
-                count_info = st.session_state.coach.get_count_info(game.dealt_cards)
-                st.write("**Card Count Info:**")
-                st.write(f"Running Count: {count_info['running_count']}")
-                st.write(f"True Count: {count_info['true_count']:.1f}")
-                st.write(f"Deck Penetration: {count_info['penetration']:.1%}")
+            try:
+                current_hand = game.player_hand[game.current_hand_index] if game.current_hand_index < len(game.player_hand) else game.player_hand[0]
+                dealer_upcard = game.dealer_hand_cards.cards[0] if len(game.dealer_hand_cards.cards) > 0 else None
+                
+                if dealer_upcard:
+                    recommendation = st.session_state.coach.get_recommendation(
+                        [current_hand], 
+                        dealer_upcard
+                    )
+                    
+                    st.info(f"**Recommended Action:** {recommendation['action']}")
+                    st.write(f"**Reason:** {recommendation['reason']}")
+                    st.write(f"**Win Probability:** {recommendation['win_probability']:.1%}")
+                    
+                    # Card counting information
+                    if game.cards_dealt > 0:
+                        count_info = st.session_state.coach.get_count_info(game.dealt_cards)
+                        st.write("**Card Count Info:**")
+                        st.write(f"Running Count: {count_info['running_count']}")
+                        st.write(f"True Count: {count_info['true_count']:.1f}")
+                        st.write(f"Deck Penetration: {count_info['penetration']:.1%}")
+                else:
+                    st.write("Waiting for cards to be dealt...")
+            except Exception as e:
+                st.write("AI Coach initializing...")
     
     with col3:
         st.subheader("Statistics")

@@ -2,7 +2,7 @@ from typing import Dict, List, Tuple
 
 class BasicStrategy:
     def __init__(self):
-        # Hard totals strategy (player total, dealer upcard) -> action
+        # Updated hard totals strategy based on professional blackjack strategy charts
         self.hard_strategy = {
             # Player 5-8: Always hit
             5: {2: 'hit', 3: 'hit', 4: 'hit', 5: 'hit', 6: 'hit', 7: 'hit', 8: 'hit', 9: 'hit', 10: 'hit', 11: 'hit'},
@@ -19,7 +19,7 @@ class BasicStrategy:
             # Player 11: Double vs 2-10, hit vs A
             11: {2: 'double', 3: 'double', 4: 'double', 5: 'double', 6: 'double', 7: 'double', 8: 'double', 9: 'double', 10: 'double', 11: 'hit'},
             
-            # Player 12: Stand vs 4-6, hit otherwise
+            # Player 12: Hit vs 2,3 and 7-A, Stand vs 4-6
             12: {2: 'hit', 3: 'hit', 4: 'stand', 5: 'stand', 6: 'stand', 7: 'hit', 8: 'hit', 9: 'hit', 10: 'hit', 11: 'hit'},
             
             # Player 13-16: Stand vs 2-6, hit vs 7-A
