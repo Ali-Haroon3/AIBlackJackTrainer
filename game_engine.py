@@ -435,3 +435,7 @@ class BlackjackGame:
     def cards_dealt(self) -> int:
         """Get number of cards dealt"""
         return len(self.deck.dealt_cards)
+    
+    def split(self):
+        """Split the current hand - alias for split_hand for compatibility"""
+        return self.split_hand()

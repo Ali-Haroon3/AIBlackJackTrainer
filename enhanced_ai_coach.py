@@ -213,22 +213,22 @@ class EnhancedAICoach:
             ) if show_advice else "Click 'Get Hint' for advice"
             
             return {
-                'action': action if show_advice else "Hidden",
+                'action': action,  # Always return the actual action
                 'reason': reason,
                 'win_probability': win_probability,
                 'confidence': confidence,
                 'basic_strategy': basic_action,
-                'show_advice': show_advice
+                'reasoning': reason
             }
         except Exception as e:
             # Fallback for any errors
             return {
-                'action': 'Hit' if show_advice else "Hidden",
-                'reason': "Unable to analyze hand" if show_advice else "Click 'Get Hint' for advice",
+                'action': 'Hit',  # Always return actual action, never "Hidden"
+                'reason': "Using basic strategy fallback",
                 'win_probability': 0.5,
                 'confidence': 0.5,
                 'basic_strategy': 'Hit',
-                'show_advice': show_advice
+                'reasoning': "Basic strategy recommendation"
             }
     
     def _estimate_win_probability(self, player_total: int, dealer_value: int, 

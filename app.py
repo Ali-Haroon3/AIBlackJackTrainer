@@ -224,26 +224,80 @@ if page == "Home":
 elif page == "Game Training":
     st.header("Interactive Blackjack Training")
     
-    # Training controls at top
-    st.subheader("🎛️ Training Controls")
-    col1, col2, col3, col4 = st.columns(4)
+    # Bankroll Management Section
+    st.subheader("💰 Bankroll Management")
     
-    with col1:
+    # Initialize bankroll values
+    if 'bankroll' not in st.session_state:
+        st.session_state.bankroll = 1000
+    if 'session_profit' not in st.session_state:
+        st.session_state.session_profit = 0
+    
+    bank_col1, bank_col2, bank_col3, bank_col4 = st.columns(4)
+    
+    with bank_col1:
+        st.session_state.bankroll = st.number_input(
+            "Starting Bankroll ($)",
+            min_value=100,
+            max_value=10000,
+            value=st.session_state.bankroll,
+            step=100
+        )
+    
+    with bank_col2:
+        current_bankroll = st.session_state.bankroll + st.session_state.session_profit
+        st.metric("Current Bankroll", f"${current_bankroll:,.2f}")
+    
+    with bank_col3:
+        profit_delta = "normal" if st.session_state.session_profit >= 0 else "inverse"
+        st.metric("Session P&L", f"${st.session_state.session_profit:+.2f}", delta_color=profit_delta)
+    
+    with bank_col4:
+        if st.button("💰 Reset Session"):
+            st.session_state.session_profit = 0
+            st.rerun()
+    
+    # Bet Spread Reference
+    with st.expander("📊 Professional Bet Spread Reference"):
+        spread_col1, spread_col2 = st.columns(2)
+        
+        with spread_col1:
+            st.markdown("**Conservative 1-4 Spread (Low Risk):**")
+            st.write("• Negative counts: 1 unit")
+            st.write("• TC +2 or higher: 4 units")
+            st.write("• Risk of detection: Minimal")
+            st.write("• Expected hourly: +$15-25")
+        
+        with spread_col2:
+            st.markdown("**Aggressive 1-12 Spread (High Risk):**")
+            st.write("• TC ≤ 0: 1 unit")
+            st.write("• TC +1: 2 units")
+            st.write("• TC +2: 4 units") 
+            st.write("• TC +3: 8 units")
+            st.write("• TC ≥ +4: 12 units")
+            st.write("• Expected hourly: +$50-100")
+    
+    st.divider()
+    
+    # Training controls - aligned properly
+    st.subheader("🎛️ Training Controls")
+    control_col1, control_col2, control_col3, control_col4 = st.columns([2.5, 2, 2, 1.5])
+    
+    with control_col1:
         counting_system = st.selectbox("Counting System:", 
                                      ["Hi-Lo", "KO", "Hi-Opt I", "Hi-Opt II", "Omega II", "Red Seven"], 
                                      index=0)
         st.session_state.counting_system = counting_system
     
-    with col2:
-        show_hint = st.checkbox("Get AI Hint", value=st.session_state.show_advice)
-        st.session_state.show_advice = show_hint
+    with control_col2:
+        st.write("")  # Empty space for layout
     
-    with col3:
-        show_count = st.checkbox("Show Count", value=st.session_state.show_count)
-        st.session_state.show_count = show_count
+    with control_col3:
+        st.write("")  # Empty space for layout
     
-    with col4:
-        if st.button("Reset Game"):
+    with control_col4:
+        st.write("")  # Add spacing to align with selectbox
+        if st.button("🔄 Reset Game"):
             st.session_state.game = BlackjackGame()
             st.rerun()
     
@@ -255,11 +309,28 @@ elif page == "Game Training":
     # Bet placement when game not active
     if not game.game_active:
         st.markdown("### 🎯 Place Your Bet")
-        bet_amount = st.slider("Bet Amount ($)", min_value=10, max_value=500, value=50, step=10)
+        
+        # Calculate max bet based on current bankroll
+        current_bankroll = st.session_state.bankroll + st.session_state.session_profit
+        max_bet = min(500, max(10, current_bankroll))
+        
+        bet_amount = st.slider(
+            "Bet Amount ($)", 
+            min_value=10, 
+            max_value=int(max_bet), 
+            value=min(50, int(max_bet)), 
+            step=10
+        )
+        
+        # Store bet amount in session state for outcome processing
+        st.session_state.current_bet = bet_amount
         
         if st.button("🃏 Deal Cards", type="primary"):
-            game.new_hand(bet_amount)
-            st.rerun()
+            if bet_amount <= current_bankroll:
+                game.new_hand(bet_amount)
+                st.rerun()
+            else:
+                st.error("Insufficient bankroll for this bet!")
     
     else:
         # Game is active - display cards and actions
@@ -344,14 +415,11 @@ elif page == "Game Training":
                         st.rerun()
             
             with col4:
-                can_split = len(game.player_hand) == 1 and len(game.player_hand[0].cards) == 2 and game.player_hand[0].cards[0].rank == game.player_hand[0].cards[1].rank
+                can_split = game.can_split() if hasattr(game, 'can_split') else False
                 if st.button("✂️ Split", disabled=not can_split):
-                    if can_split and hasattr(game, 'split'):
+                    if can_split:
                         game.split()
                         st.rerun()
-                    elif can_split:
-                        # Fallback split logic
-                        st.info("Split functionality being enhanced")
             
             with col5:
                 can_surrender = len(game.player_hand[0].cards) == 2 and len(game.player_hand) == 1
@@ -362,6 +430,20 @@ elif page == "Game Training":
                     elif can_surrender:
                         # Fallback surrender logic
                         st.info("Surrender functionality being enhanced")
+            
+            # Training tools below action buttons
+            st.markdown("#### 📊 Training Tools")
+            help_col1, help_col2 = st.columns(2)
+            
+            with help_col1:
+                if st.button("🤖 Get AI Hint"):
+                    st.session_state.show_advice = True
+                    st.rerun()
+                    
+            with help_col2:
+                if st.button("🧮 Show Count"):
+                    st.session_state.show_count = not st.session_state.show_count
+                    st.rerun()
         
         st.divider()
         
@@ -375,21 +457,47 @@ elif page == "Game Training":
                     current_hand = game.player_hand[0]
                     dealer_upcard = game.dealer_hand_cards.cards[0].get_value() if game.dealer_hand_cards.cards else 10
                     
+                    # Pass show_advice=True to ensure action is returned
                     recommendation = st.session_state.coach.get_recommendation(
                         player_hands=game.player_hand,
-                        dealer_upcard=dealer_upcard
+                        dealer_upcard=dealer_upcard,
+                        show_advice=True
                     )
                     
-                    if recommendation:
-                        action = recommendation.get('action', 'Stand')
-                        confidence = recommendation.get('confidence', 0.5)
-                        reasoning = recommendation.get('reasoning', 'Basic strategy recommendation')
+                    action = recommendation.get('action', 'Stand')
+                    confidence = recommendation.get('confidence', 0.5)
+                    reasoning = recommendation.get('reasoning', 'Basic strategy recommendation')
+                    
+                    # Ensure we never show "Hidden"
+                    if action == "Hidden":
+                        action = "Stand"  # Fallback action
+                    
+                    st.success(f"**Recommended Action:** {action}")
+                    st.info(f"**Confidence:** {confidence:.1%}")
+                    st.write(f"**Reasoning:** {reasoning}")
                         
-                        st.info(f"**Recommended Action:** {action}")
-                        st.write(f"**Confidence:** {confidence:.1%}")
-                        st.write(f"**Reasoning:** {reasoning}")
                 except Exception as e:
                     st.warning("AI coach temporarily unavailable")
+                    # Fallback to basic strategy
+                    try:
+                        from bja_strategy import BJABasicStrategy
+                        basic_strategy = BJABasicStrategy()
+                        
+                        player_total = current_hand.get_value()
+                        is_soft = current_hand.is_soft()
+                        can_double = len(current_hand.cards) == 2
+                        
+                        action = basic_strategy.get_action(
+                            player_total=player_total,
+                            dealer_upcard=dealer_upcard,
+                            is_soft=is_soft,
+                            can_double=can_double
+                        )
+                        
+                        st.success(f"**Basic Strategy Action:** {action}")
+                        st.info("Using BJA basic strategy chart")
+                    except:
+                        st.error("Strategy recommendations unavailable")
         
         with col2:
             if st.session_state.show_count:
@@ -484,27 +592,52 @@ elif page == "Game Training":
         if game.hand_complete:
             st.markdown("### 🎰 Hand Results")
             
+            # Calculate and update bankroll based on outcomes
+            if 'hand_results_processed' not in st.session_state:
+                st.session_state.hand_results_processed = False
+            
             # Simple result display based on game state
             player_total = game.player_hand[0].get_value()
             dealer_total = game.dealer_hand_cards.get_value()
+            bet_amount = getattr(st.session_state, 'current_bet', 50)
             
+            # Determine outcome and payout
+            payout = 0
             if game.player_hand[0].is_busted():
-                st.error("You busted! Dealer wins.")
+                st.error(f"You busted! Dealer wins. Loss: -${bet_amount}")
+                payout = -bet_amount
             elif game.dealer_hand_cards.is_busted():
-                st.success("Dealer busted! You win!")
+                st.success(f"Dealer busted! You win! Gain: +${bet_amount}")
+                payout = bet_amount
             elif game.player_hand[0].is_blackjack() and not game.dealer_hand_cards.is_blackjack():
-                st.success("Blackjack! You win!")
+                blackjack_payout = int(bet_amount * 1.5)
+                st.success(f"Blackjack! You win! Gain: +${blackjack_payout}")
+                payout = blackjack_payout
             elif game.dealer_hand_cards.is_blackjack() and not game.player_hand[0].is_blackjack():
-                st.error("Dealer has blackjack! You lose.")
+                st.error(f"Dealer has blackjack! You lose. Loss: -${bet_amount}")
+                payout = -bet_amount
             elif player_total > dealer_total:
-                st.success("You win!")
+                st.success(f"You win! Gain: +${bet_amount}")
+                payout = bet_amount
             elif dealer_total > player_total:
-                st.error("Dealer wins!")
+                st.error(f"Dealer wins! Loss: -${bet_amount}")
+                payout = -bet_amount
             else:
-                st.info("Push (tie)!")
+                st.info("Push (tie)! No change to bankroll.")
+                payout = 0
+            
+            # Update session profit only once per hand
+            if not st.session_state.hand_results_processed:
+                st.session_state.session_profit += payout
+                st.session_state.hand_results_processed = True
+                
+                # Show updated bankroll
+                current_bankroll = st.session_state.bankroll + st.session_state.session_profit
+                st.metric("Updated Bankroll", f"${current_bankroll:.2f}", f"{payout:+.2f}")
             
             if st.button("🔄 New Hand"):
                 st.session_state.game = BlackjackGame()
+                st.session_state.hand_results_processed = False
                 st.rerun()
 
 elif page == "Strategy Analysis":
