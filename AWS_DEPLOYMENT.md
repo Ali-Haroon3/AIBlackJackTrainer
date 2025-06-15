@@ -1,7 +1,10 @@
-# AWS Amplify Deployment Guide
+# AWS Deployment Guide - Streamlit Application
 
 ## Overview
-This guide will help you deploy the AI Blackjack Trainer application to AWS Amplify using your GitHub repository.
+This guide covers deploying the AI Blackjack Trainer Streamlit application to AWS using the best service for Python web apps.
+
+## Recommended: AWS App Runner (Best for Streamlit)
+AWS App Runner is specifically designed for containerized web applications like Streamlit and provides automatic scaling, load balancing, and GitHub integration.
 
 ## Pre-Deployment Steps
 
@@ -28,30 +31,39 @@ psycopg2-binary>=2.9.0
 python-dotenv>=1.0.0
 ```
 
-## AWS Amplify Deployment Steps
+## AWS App Runner Deployment Steps
 
-### Step 1: Access AWS Amplify Console
-1. Go to [AWS Amplify Console](https://console.aws.amazon.com/amplify/)
-2. Click "New App" → "Host web app"
-3. Select "GitHub" as your source
+### Step 1: Access AWS App Runner Console
+1. Go to [AWS App Runner Console](https://console.aws.amazon.com/apprunner/)
+2. Click "Create service"
+3. Select "Source code repository"
 
 ### Step 2: Connect Repository
-1. Authorize AWS to access your GitHub account
-2. Select repository: `Ali-Haroon3/AIBlackJackTrainer`
-3. Select branch: `main`
-4. Click "Next"
+1. Select "GitHub" as source
+2. Connect to your GitHub account if not already connected
+3. Choose repository: `Ali-Haroon3/AIBlackJackTrainer`
+4. Choose branch: `main`
+5. Select "Automatic" for deployment trigger
 
 ### Step 3: Configure Build Settings
-1. App name: `ai-blackjack-trainer`
-2. Build specification: Use the provided `amplify.yml` file
-3. Advanced settings (if needed):
-   - Environment variables for database connections
-   - Build timeout: 20 minutes (for ML dependencies)
+1. Runtime: Select "Python 3"
+2. Source directory: Leave as root (/)
+3. Build command: `pip install -r requirements.txt` (or leave automatic)
+4. Start command: `streamlit run app.py --server.port=8080 --server.address=0.0.0.0 --server.headless=true`
 
-### Step 4: Review and Deploy
-1. Review all settings
-2. Click "Save and deploy"
-3. Wait for deployment (usually 10-15 minutes)
+### Step 4: Configure Service Settings
+1. Service name: `ai-blackjack-trainer`
+2. Virtual CPU: 1 vCPU
+3. Memory: 2 GB
+4. Port: 8080 (App Runner default)
+5. Auto scaling: 1-10 instances
+6. Health check: Default HTTP settings
+
+### Step 5: Review and Create
+1. Review all configurations
+2. Click "Create & deploy"
+3. Wait for deployment (typically 5-10 minutes)
+4. Access your live application URL
 
 ## Custom Domain Setup (Optional)
 1. Go to "Domain management" in Amplify console
