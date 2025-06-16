@@ -3,29 +3,16 @@ runtime: python3
 build:
   commands:
     build:
-      - echo "Installing dependencies"
+      - echo "Installing dependencies for App Runner"
       - pip install --upgrade pip
-      - pip install streamlit>=1.28.0
-      - pip install pandas>=1.5.0
-      - pip install numpy>=1.24.0
-      - pip install plotly>=5.15.0
-      - pip install scikit-learn>=1.3.0
-      - pip install requests>=2.31.0
-      - pip install beautifulsoup4>=4.12.0
-      - pip install trafilatura>=1.6.0
-      - pip install Pillow>=10.0.0
-      - pip install sqlalchemy>=2.0.0
-      - pip install psycopg2-binary>=2.9.0
-      - pip install python-dotenv>=1.0.0
+      - pip install -r requirements.txt
 run:
   runtime-version: '3.11'
-  command: streamlit run app.py --server.port=8080 --server.address=0.0.0.0 --server.headless=true
+  command: python app_runner_fix.py
   network:
     port: 8080
   env:
-    - name: STREAMLIT_SERVER_PORT
+    - name: PORT
       value: "8080"
-    - name: STREAMLIT_SERVER_ADDRESS
-      value: "0.0.0.0"
     - name: STREAMLIT_SERVER_HEADLESS
       value: "true"
