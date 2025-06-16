@@ -1,13 +1,19 @@
 [server]
 headless = true
+port = 8080
 address = "0.0.0.0"
-port = 5000
-
-[theme]
-primaryColor = "#FF6B6B"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
-textColor = "#262730"
+enableCORS = false
+enableXsrfProtection = false
+enableWebsocketCompression = false
+allowRunOnSave = false
+fileWatcherType = "none"
 
 [browser]
 gatherUsageStats = false
+
+[theme]
+base = "dark"
+primaryColor = "#FF6B35"
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#262730"
+textColor = "#FAFAFA"

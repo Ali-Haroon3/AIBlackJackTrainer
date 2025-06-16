@@ -16,8 +16,9 @@ def main():
     os.environ['STREAMLIT_BROWSER_GATHER_USAGE_STATS'] = 'false'
     os.environ['STREAMLIT_SERVER_ENABLE_CORS'] = 'false'
     os.environ['STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION'] = 'false'
+    os.environ['STREAMLIT_SERVER_ENABLE_WEBSOCKET_COMPRESSION'] = 'false'
     
-    # Launch Streamlit with optimized settings for App Runner
+    # Launch Streamlit with WebSocket fixes for App Runner
     cmd = [
         'streamlit', 'run', 'app.py',
         '--server.port=8080',
@@ -25,8 +26,10 @@ def main():
         '--server.headless=true',
         '--server.enableCORS=false',
         '--server.enableXsrfProtection=false',
+        '--server.enableWebsocketCompression=false',
         '--browser.gatherUsageStats=false',
-        '--server.fileWatcherType=none'
+        '--server.fileWatcherType=none',
+        '--server.allowRunOnSave=false'
     ]
     
     print("Starting Streamlit application for AWS App Runner...")

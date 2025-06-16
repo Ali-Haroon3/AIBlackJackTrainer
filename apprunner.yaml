@@ -6,13 +6,15 @@ build:
       - echo "Installing dependencies for App Runner"
       - pip install --upgrade pip
       - pip install -r requirements.txt
+      - pip install requests
 run:
   runtime-version: '3.11'
-  command: python app_runner_fix.py
+  command: streamlit run app.py --server.port=8080 --server.address=0.0.0.0 --server.headless=true --server.enableCORS=false --server.enableXsrfProtection=false
   network:
     port: 8080
+    protocol: http
   env:
-    - name: PORT
-      value: "8080"
     - name: STREAMLIT_SERVER_HEADLESS
       value: "true"
+    - name: STREAMLIT_SERVER_ENABLE_CORS
+      value: "false"
