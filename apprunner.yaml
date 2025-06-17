@@ -3,18 +3,15 @@ runtime: python3
 build:
   commands:
     build:
-      - echo "Installing dependencies for App Runner"
+      - echo "Installing dependencies"
       - pip install --upgrade pip
-      - pip install -r requirements.txt
-      - pip install requests
+      - pip install flask==3.0.0 flask-cors==4.0.0 flask-socketio==5.3.6 gunicorn==21.2.0
 run:
-  runtime-version: '3.11'
-  command: streamlit run app.py --server.port=8080 --server.address=0.0.0.0 --server.headless=true --server.enableCORS=false --server.enableXsrfProtection=false
+  runtime-version: 3.11
+  command: gunicorn --bind 0.0.0.0:8000 --workers 1 --timeout 120 app:app
   network:
-    port: 8080
-    protocol: http
+    port: 8000
+    env: PORT
   env:
-    - name: STREAMLIT_SERVER_HEADLESS
-      value: "true"
-    - name: STREAMLIT_SERVER_ENABLE_CORS
-      value: "false"
+    - name: PORT
+      value: "8000"
