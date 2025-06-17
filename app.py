@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-AWS-optimized entry point for the Blackjack AI Training Application
-"""
-
 import os
 from simple_complete_app import app
 
