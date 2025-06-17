@@ -3,14 +3,9 @@ runtime: python3
 build:
   commands:
     build:
-      - echo "Installing Flask dependencies"
       - pip install --upgrade pip
-      - pip install flask==3.0.0
-      - pip install flask-cors==4.0.0
-      - pip install flask-socketio==5.3.6
-      - echo "Dependencies installed successfully"
+      - pip install flask==3.0.0 flask-cors==4.0.0 flask-socketio==5.3.6
 run:
-  runtime-version: 3.9
   command: python app.py
   network:
     port: 8000
