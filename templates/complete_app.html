@@ -1,0 +1,2637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack AI Training & Strategy Optimization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 3px solid #ffd700;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .header h1 {
+            color: #ffd700;
+            font-size: 3rem;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .nav-container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            background: linear-gradient(145deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.25));
+            border: 2px solid #ffd700;
+            border-radius: 12px;
+            color: #ffd700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tab-button:hover, .tab-button.active {
+            background: linear-gradient(145deg, #ffd700, #ffed4e);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 200px);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Home page styles */
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .welcome-section h2 {
+            color: #ffd700;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .info-card {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 2px solid #ffd700;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-card h3 {
+            color: #ffd700;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-card li {
+            margin: 0.8rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .info-card li:before {
+            content: "▸";
+            color: #ffd700;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        /* Game interface styles */
+        .bankroll-section {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 2px solid #ffd700;
+            margin-bottom: 2rem;
+        }
+
+        .bankroll-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .bankroll-item {
+            text-align: center;
+        }
+
+        .bankroll-item label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .bankroll-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .bankroll-input {
+            padding: 8px 12px;
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 16px;
+            text-align: center;
+            width: 100%;
+            max-width: 150px;
+        }
+
+        /* Game table styles */
+        .game-table {
+            background: radial-gradient(ellipse at center, #0a4d3a 0%, #0f3d2a 40%, #0a2a1a 100%);
+            border-radius: 50px;
+            padding: 3rem;
+            margin: 2rem 0;
+            border: 8px solid #8b4513;
+            min-height: 500px;
+            position: relative;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .dealer-area, .player-area {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .dealer-area h3, .player-area h3 {
+            color: #ffd700;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .cards-display {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+            min-height: 140px;
+            align-items: center;
+        }
+
+        .card {
+            width: 90px;
+            height: 130px;
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            border-radius: 12px;
+            border: 3px solid #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card.red {
+            color: #dc143c;
+        }
+
+        .card.black {
+            color: #000;
+        }
+
+        .card-back {
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .hand-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            padding: 0.8rem 1.5rem;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 25px;
+            display: inline-block;
+            border: 2px solid #ffd700;
+            color: #fff;
+        }
+
+        /* Control panels */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .control-panel {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 2px solid #ffd700;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-panel h3 {
+            color: #ffd700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 100px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(145deg, #ffc107, #fd7e14);
+            color: #000;
+        }
+
+        .btn-danger {
+            background: linear-gradient(145deg, #dc3545, #e74c3c);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(145deg, #6c757d, #495057);
+            color: white;
+        }
+
+        .btn-gold {
+            background: linear-gradient(145deg, #ffd700, #ffed4e);
+            color: #000;
+        }
+
+        /* AI recommendation */
+        .ai-recommendation {
+            background: linear-gradient(145deg, #6f42c1, #e83e8c);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin: 1.5rem 0;
+            text-align: center;
+            border: 2px solid #ffd700;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .ai-action {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+            margin-bottom: 0.5rem;
+        }
+
+        .ai-reasoning {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+
+        /* Count display */
+        .count-display {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 2px solid #00ff88;
+            margin: 1rem 0;
+        }
+
+        .count-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.5rem 0;
+            font-weight: bold;
+        }
+
+        .count-value {
+            color: #00ff88;
+            font-size: 1.2rem;
+        }
+
+        /* Strategy charts */
+        .strategy-container {
+            overflow-x: auto;
+            margin: 2rem 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .strategy-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 10px;
+            overflow: hidden;
+            font-size: 14px;
+        }
+
+        .strategy-table th,
+        .strategy-table td {
+            padding: 12px 8px;
+            text-align: center;
+            border: 1px solid #444;
+            font-weight: bold;
+            min-width: 35px;
+        }
+
+        .strategy-table th {
+            background: linear-gradient(145deg, #ffd700, #ffed4e);
+            color: #000;
+            font-size: 16px;
+        }
+
+        /* Improved strategy chart colors with better contrast */
+        .action-H { 
+            background-color: #e74c3c !important; 
+            color: white !important; 
+            border: 2px solid #c0392b !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+        }
+        .action-S { 
+            background-color: #27ae60 !important; 
+            color: white !important; 
+            border: 2px solid #229954 !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+        }
+        .action-D { 
+            background-color: #f39c12 !important; 
+            color: white !important; 
+            border: 2px solid #e67e22 !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+        }
+        .action-P { 
+            background-color: #3498db !important; 
+            color: white !important; 
+            border: 2px solid #2980b9 !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+        }
+        .action-Rh { 
+            background-color: #e67e22 !important; 
+            color: white !important; 
+            border: 2px solid #d35400 !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+        }
+        .action-Rs { 
+            background-color: #8e44ad !important; 
+            color: white !important; 
+            border: 2px solid #7d3c98 !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* Analytics and Monte Carlo */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .metric-card {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 2px solid #ffd700;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 1rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .monte-carlo-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            border: 2px solid #ffd700;
+        }
+
+        /* Messages */
+        .message {
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            text-align: center;
+            font-weight: bold;
+            border: 2px solid;
+        }
+
+        .message.success {
+            background: rgba(40, 167, 69, 0.9);
+            border-color: #28a745;
+        }
+
+        .message.error {
+            background: rgba(220, 53, 69, 0.9);
+            border-color: #dc3545;
+        }
+
+        .message.info {
+            background: rgba(23, 162, 184, 0.9);
+            border-color: #17a2b8;
+        }
+
+        .message.warning {
+            background: rgba(255, 193, 7, 0.9);
+            border-color: #ffc107;
+            color: #000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .game-table {
+                padding: 1.5rem;
+            }
+            
+            .card {
+                width: 70px;
+                height: 100px;
+                font-size: 12px;
+            }
+        }
+
+        /* Loading states */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ffd700;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Bet spread reference */
+        .bet-spread {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 2px solid #ffd700;
+            margin: 1rem 0;
+        }
+
+        .spread-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .spread-item h4 {
+            color: #ffd700;
+            margin-bottom: 0.5rem;
+        }
+
+        .spread-item ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .spread-item li {
+            margin: 0.3rem 0;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .spread-item li:before {
+            content: "•";
+            color: #ffd700;
+            position: absolute;
+            left: 0;
+        }
+
+        /* Message styles */
+        #game-messages {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .message {
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .message.success {
+            background: rgba(46, 204, 113, 0.9);
+            color: #fff;
+            border: 2px solid #27ae60;
+        }
+
+        .message.error {
+            background: rgba(231, 76, 60, 0.9);
+            color: #fff;
+            border: 2px solid #c0392b;
+        }
+
+        .message.info {
+            background: rgba(52, 152, 219, 0.9);
+            color: #fff;
+            border: 2px solid #2980b9;
+        }
+
+        .message.warning {
+            background: rgba(243, 156, 18, 0.9);
+            color: #fff;
+            border: 2px solid #f39c12;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🃏 Blackjack AI Training & Strategy Optimization</h1>
+        <p>Master Basic Strategy, Card Counting & Advanced Techniques with Professional AI Coaching</p>
+    </div>
+
+    <div class="nav-container">
+        <div class="nav-tabs">
+            <div class="tab-button active" onclick="showTab('home')">🏠 Home</div>
+            <div class="tab-button" onclick="showTab('game')">🎯 Game Training</div>
+            <div class="tab-button" onclick="showTab('strategy')">📊 Strategy Analysis</div>
+            <div class="tab-button" onclick="showTab('monte-carlo')">🎲 Monte Carlo</div>
+            <div class="tab-button" onclick="showTab('analytics')">📈 Analytics</div>
+            <div class="tab-button" onclick="showTab('counting')">🧮 Card Counting</div>
+        </div>
+    </div>
+
+    <!-- Home Tab -->
+    <div id="home-tab" class="tab-content active">
+        <div class="welcome-section">
+            <h2>Welcome to Blackjack AI Training</h2>
+            <p>The most comprehensive blackjack training platform with professional AI coaching, strategy optimization, and performance analytics.</p>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <h3>🎯 What is Blackjack?</h3>
+                <p><strong>Blackjack</strong>, also known as Twenty-One, is the most popular casino card game worldwide. The objective is simple: beat the dealer by getting a hand value as close to 21 as possible without going over (busting).</p>
+                
+                <h4 style="color: #ffd700; margin: 1rem 0;">🃏 Basic Rules</h4>
+                <ul>
+                    <li><strong>Card Values:</strong> Number cards (2-10): Face value</li>
+                    <li><strong>Face cards:</strong> (J, Q, K): 10 points each</li>
+                    <li><strong>Aces:</strong> 1 or 11 points (whichever is better)</li>
+                </ul>
+
+                <h4 style="color: #ffd700; margin: 1rem 0;">🎲 Player Actions</h4>
+                <ul>
+                    <li><strong>Hit:</strong> Take another card</li>
+                    <li><strong>Stand:</strong> Keep your current hand</li>
+                    <li><strong>Double Down:</strong> Double bet, take one card, then stand</li>
+                    <li><strong>Split:</strong> Split pairs into two separate hands</li>
+                    <li><strong>Surrender:</strong> Give up half your bet and fold</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h3>🎯 Why Basic Strategy Matters</h3>
+                <p>Basic strategy is the mathematically optimal way to play every blackjack hand based on your cards and the dealer's upcard. When played perfectly:</p>
+                <ul>
+                    <li>Reduces house edge to just 0.5%</li>
+                    <li>Increases your winning percentage significantly</li>
+                    <li>Forms the foundation for card counting</li>
+                    <li>Eliminates costly emotional decisions</li>
+                </ul>
+
+                <h4 style="color: #ffd700; margin: 1rem 0;">📚 What You'll Learn</h4>
+                <ul>
+                    <li>Perfect basic strategy for all situations</li>
+                    <li>Professional BJA strategy charts</li>
+                    <li>S17/H17 rule variations</li>
+                    <li>Optimal play for every hand combination</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h3>🧮 Card Counting</h3>
+                <p>Card counting is a legal strategy that tracks the ratio of high to low cards remaining in the deck. This information helps you:</p>
+                <ul>
+                    <li>Identify favorable betting opportunities</li>
+                    <li>Adjust your playing strategy</li>
+                    <li>Gain a mathematical edge over the casino</li>
+                    <li>Maximize profits during positive counts</li>
+                </ul>
+
+                <h4 style="color: #ffd700; margin: 1rem 0;">🎯 Counting Systems</h4>
+                <ul>
+                    <li><strong>Hi-Lo:</strong> Most popular and effective</li>
+                    <li><strong>KO (Knock-Out):</strong> Easier unbalanced system</li>
+                    <li><strong>Hi-Opt I & II:</strong> Advanced precision systems</li>
+                    <li><strong>Omega II:</strong> Professional level system</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h3>📈 AI Coaching</h3>
+                <p>Our advanced AI coach uses machine learning to provide personalized recommendations and track your progress:</p>
+                <ul>
+                    <li>Real-time strategy recommendations</li>
+                    <li>Performance analytics and progress tracking</li>
+                    <li>Mistake pattern analysis</li>
+                    <li>Personalized improvement suggestions</li>
+                    <li>Advanced deviation recommendations</li>
+                </ul>
+
+                <h4 style="color: #ffd700; margin: 1rem 0;">🎲 Monte Carlo Simulations</h4>
+                <ul>
+                    <li>Test different betting strategies</li>
+                    <li>Analyze risk vs. reward scenarios</li>
+                    <li>Calculate expected value and variance</li>
+                    <li>Optimize bankroll management</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h3>🚀 Getting Started</h3>
+            <p>Ready to become a blackjack expert? Here's your learning path:</p>
+            <ol style="list-style: decimal; padding-left: 2rem; margin-top: 1rem;">
+                <li><strong>Master Basic Strategy:</strong> Start with the Strategy Analysis section to learn perfect basic strategy</li>
+                <li><strong>Practice Gameplay:</strong> Use Game Training to practice with AI coaching and real-time feedback</li>
+                <li><strong>Learn Card Counting:</strong> Progress to Card Counting section to master Hi-Lo and advanced systems</li>
+                <li><strong>Analyze Performance:</strong> Use Analytics to track your progress and identify areas for improvement</li>
+                <li><strong>Optimize Strategy:</strong> Run Monte Carlo simulations to test different approaches</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Game Training Tab -->
+    <div id="game-tab" class="tab-content">
+        <h2>Interactive Blackjack Training</h2>
+
+        <!-- Bankroll Management -->
+        <div class="bankroll-section">
+            <h3>💰 Bankroll Management</h3>
+            <div class="bankroll-grid">
+                <div class="bankroll-item">
+                    <label>Starting Bankroll</label>
+                    <input type="number" id="starting-bankroll" class="bankroll-input" value="1000" min="100" max="10000" step="100">
+                </div>
+                <div class="bankroll-item">
+                    <label>Current Bankroll</label>
+                    <div class="bankroll-value" id="current-bankroll">$1000</div>
+                </div>
+                <div class="bankroll-item">
+                    <label>Session P&L</label>
+                    <div class="bankroll-value" id="session-profit">$0</div>
+                </div>
+                <div class="bankroll-item">
+                    <button class="btn btn-secondary" onclick="handleResetSession()">Reset Session</button>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Training Controls -->
+        <div class="controls-grid" style="grid-template-columns: 2fr 1fr;">
+            <div class="control-panel">
+                <h3>🎛️ Training & Betting Controls</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label for="counting-system" style="display: block; margin-bottom: 0.5rem; color: #ffd700;">Counting System:</label>
+                        <select id="counting-system" style="width: 100%; padding: 8px; border-radius: 5px; border: 2px solid #ffd700; background: rgba(0,0,0,0.8); color: #fff;">
+                            <option value="Hi-Lo">Hi-Lo</option>
+                            <option value="KO">KO (Knock-Out)</option>
+                            <option value="Hi-Opt I">Hi-Opt I</option>
+                            <option value="Hi-Opt II">Hi-Opt II</option>
+                            <option value="Omega II">Omega II</option>
+                            <option value="Red Seven">Red Seven</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+                    <button class="btn btn-secondary" onclick="handleStartNewSession()">🔄 New Session</button>
+                </div>
+            </div>
+
+            <div class="control-panel" id="count-practice-panel">
+                <h3>🧮 Count Practice</h3>
+                <div class="count-display hidden" id="count-display-panel">
+                    <h4>🧮 Count Information</h4>
+                    <div class="count-item">
+                        <span>Running Count:</span>
+                        <span class="count-value" id="running-count">0</span>
+                    </div>
+                    <div class="count-item">
+                        <span>True Count:</span>
+                        <span class="count-value" id="true-count">0.0</span>
+                    </div>
+                    <div class="count-item">
+                        <span>Recommended Bet:</span>
+                        <span class="count-value" id="recommended-bet">$10</span>
+                    </div>
+                    <div class="count-item">
+                        <span>Deck Penetration:</span>
+                        <span class="count-value" id="deck-penetration">0%</span>
+                    </div>
+                    <button class="btn btn-secondary" onclick="hideCountDisplay()" style="width: 100%; margin-top: 1rem;">Hide Count</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Messages -->
+        <div id="game-messages"></div>
+
+        <!-- Game Table -->
+        <div class="game-table">
+            <!-- Dealer Area -->
+            <div class="dealer-area">
+                <h3>🎩 Dealer</h3>
+                <div class="cards-display" id="dealer-cards"></div>
+                <div class="hand-value" id="dealer-value">--</div>
+            </div>
+
+            <!-- Player Area -->
+            <div class="player-area">
+                <h3>🎲 Your Hand</h3>
+                <div id="player-hands-container">
+                    <div class="cards-display" id="player-cards"></div>
+                    <div class="hand-value" id="player-value">--</div>
+                </div>
+            </div>
+
+            <!-- Count Guessing Section -->
+            <div style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.8); padding: 1rem; border-radius: 10px; border: 2px solid #ffd700;">
+                <h4 style="color: #ffd700; margin-bottom: 0.5rem;">Guess the Count</h4>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="number" id="count-guess-input" placeholder="Count" style="width: 80px; padding: 5px; border-radius: 5px; border: 2px solid #ffd700; background: rgba(0,0,0,0.7); color: #fff; text-align: center;">
+                    <button class="btn btn-secondary" onclick="checkCountGuess()" style="padding: 5px 10px; font-size: 12px;">Check</button>
+                </div>
+                <div id="count-guess-feedback" style="margin-top: 0.5rem; font-size: 12px;"></div>
+            </div>
+
+            <!-- Current Bankroll Display - Top Right -->
+            <div style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 1rem; border-radius: 10px; border: 2px solid #ffd700;">
+                <h4 style="color: #ffd700; margin-bottom: 0.5rem; text-align: center;">💰 Bankroll</h4>
+                <div style="color: #fff; font-size: 1.5rem; font-weight: bold; text-align: center;" id="table-bankroll-display">$1000</div>
+                <div style="color: #ffd700; font-size: 0.9rem; text-align: center; margin-top: 0.3rem;" id="table-profit-display">Session: $0</div>
+            </div>
+
+            <!-- Action Controls on Table -->
+            <div style="position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-primary" id="hit-btn" onclick="handlePlayerAction('hit')" disabled>Hit</button>
+                <button class="btn btn-warning" id="stand-btn" onclick="handlePlayerAction('stand')" disabled>Stand</button>
+                <button class="btn btn-danger" id="double-btn" onclick="handlePlayerAction('double')" disabled>Double</button>
+                <button class="btn btn-secondary" id="split-btn" onclick="handlePlayerAction('split')" disabled>Split</button>
+            </div>
+
+            <!-- Betting Controls - Bottom Left -->
+            <div style="position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.8); padding: 1rem; border-radius: 10px; border: 2px solid #ffd700;">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #ffd700; font-size: 14px;">Bet Amount:</label>
+                    <select id="bet-amount" style="width: 120px; padding: 8px; border-radius: 5px; border: 2px solid #ffd700; background: rgba(0,0,0,0.8); color: #fff; font-size: 14px; font-weight: bold;">
+                        <option value="10">$10</option>
+                        <option value="20">$20</option>
+                        <option value="50" selected>$50</option>
+                        <option value="100">$100</option>
+                        <option value="150">$150</option>
+                        <option value="200">$200</option>
+                        <option value="250">$250</option>
+                        <option value="500">$500</option>
+                        <option value="1000">$1000</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="deal-button" onclick="handleDealNewHand()" style="width: 100%;">🃏 Deal Cards</button>
+            </div>
+
+            <!-- AI Hint Button - positioned to not block hand totals -->
+            <div style="position: absolute; top: 50%; left: 20px; transform: translateY(-50%);">
+                <button class="btn btn-primary" id="ai-hint-btn" onclick="showAIHint()">💡 AI Hint</button>
+            </div>
+        </div>
+
+        <!-- AI Recommendation -->
+        <div id="ai-recommendation" class="ai-recommendation hidden">
+            <div class="ai-action" id="ai-action">--</div>
+            <div class="ai-reasoning" id="ai-reasoning">--</div>
+        </div>
+
+        <!-- Bet Spread Reference moved to bottom -->
+        <div class="bet-spread">
+            <h3>📊 Professional Bet Spread Reference</h3>
+            <div class="spread-grid">
+                <div class="spread-item">
+                    <h4>Conservative 1-4 Spread (Low Risk)</h4>
+                    <ul>
+                        <li>Negative counts: 1 unit</li>
+                        <li>TC +2 or higher: 4 units</li>
+                        <li>Risk of detection: Minimal</li>
+                        <li>Expected hourly: +$15-25</li>
+                    </ul>
+                </div>
+                <div class="spread-item">
+                    <h4>Aggressive 1-12 Spread (High Risk)</h4>
+                    <ul>
+                        <li>TC ≤ 0: 1 unit</li>
+                        <li>TC +1: 2 units</li>
+                        <li>TC +2: 4 units</li>
+                        <li>TC +3: 8 units</li>
+                        <li>TC ≥ +4: 12 units</li>
+                        <li>Expected hourly: +$50-100</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Strategy Analysis Tab -->
+    <div id="strategy-tab" class="tab-content">
+        <h2>📊 Strategy Analysis & Charts</h2>
+        
+        <div class="controls-grid">
+            <div class="control-panel">
+                <h3>Chart Selection</h3>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #ffd700;">Chart Type:</label>
+                    <select id="chart-type" onchange="loadStrategyChart()" style="width: 100%; padding: 8px; border-radius: 5px; border: 2px solid #ffd700; background: rgba(0,0,0,0.8); color: #fff;">
+                        <option value="basic">Basic Strategy</option>
+                        <option value="deviations">Count Deviations</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #ffd700;">Dealer Rules:</label>
+                    <select id="dealer-rules" onchange="loadStrategyChart()" style="width: 100%; padding: 8px; border-radius: 5px; border: 2px solid #ffd700; background: rgba(0,0,0,0.8); color: #fff;">
+                        <option value="S17">Dealer Stands on Soft 17</option>
+                        <option value="H17">Dealer Hits on Soft 17</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="strategy-charts-container">
+            <!-- Charts will be loaded here -->
+        </div>
+
+        <div class="legend">
+            <div class="legend-item action-H">H = Hit</div>
+            <div class="legend-item action-S">S = Stand</div>
+            <div class="legend-item action-D">D = Double</div>
+            <div class="legend-item action-P">P = Split</div>
+            <div class="legend-item action-Rh">Rh = Surrender if allowed, otherwise Hit</div>
+            <div class="legend-item action-Rs">Rs = Surrender if allowed, otherwise Stand</div>
+        </div>
+    </div>
+
+    <!-- Monte Carlo Tab -->
+    <div id="monte-carlo-tab" class="tab-content">
+        <h2>🎲 Monte Carlo Simulation</h2>
+        <p>Run comprehensive simulations to test different strategies and betting systems.</p>
+
+        <div class="monte-carlo-controls">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: #ffd700;">Number of Hands:</label>
+                <select id="mc-hands" style="width: 100%; padding: 8px; border-radius: 5px; border: 2px solid #ffd700; background: rgba(0,0,0,0.8); color: #fff;">
+                    <option value="1000">1,000 hands</option>
+                    <option value="10000" selected>10,000 hands</option>
+                    <option value="50000">50,000 hands</option>
+                    <option value="100000">100,000 hands</option>
+                </select>
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: #ffd700;">Betting Strategy:</label>
+                <select id="mc-betting" style="width: 100%; padding: 8px; border-radius: 5px; border: 2px solid #ffd700; background: rgba(0,0,0,0.8); color: #fff;">
+                    <option value="flat">Flat Betting</option>
+                    <option value="basic_count">Basic Count Strategy</option>
+                    <option value="aggressive_count">Aggressive Count Strategy</option>
+                    <option value="kelly">Kelly Criterion</option>
+                </select>
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: #ffd700;">Counting System:</label>
+                <select id="mc-counting" style="width: 100%; padding: 8px; border-radius: 5px; border: 2px solid #ffd700; background: rgba(0,0,0,0.8); color: #fff;">
+                    <option value="Hi-Lo">Hi-Lo</option>
+                    <option value="KO">KO</option>
+                    <option value="Hi-Opt I">Hi-Opt I</option>
+                    <option value="Hi-Opt II">Hi-Opt II</option>
+                </select>
+            </div>
+            <div>
+                <button class="btn btn-gold" onclick="runMonteCarloSimulation()">
+                    <span id="mc-button-text">Run Simulation</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="monte-carlo-results" class="hidden">
+            <div class="analytics-grid" id="mc-results-grid">
+                <!-- Results will be populated here -->
+            </div>
+
+            <div class="control-panel">
+                <h3>Detailed Analysis</h3>
+                <div id="mc-detailed-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Tab -->
+    <div id="analytics-tab" class="tab-content">
+        <h2>📈 Performance Analytics</h2>
+        <p>Track your progress and analyze your blackjack performance.</p>
+
+        <div class="analytics-grid" id="analytics-summary">
+            <!-- Analytics cards will be loaded here -->
+        </div>
+
+        <div class="controls-grid">
+            <div class="control-panel">
+                <h3>Decision Accuracy Analysis</h3>
+                <div id="decision-accuracy-breakdown"></div>
+            </div>
+
+            <div class="control-panel">
+                <h3>Counting Performance</h3>
+                <div id="counting-performance-analysis"></div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <h3>Recent Hands Analysis</h3>
+            <div id="recent-hands-analysis"></div>
+        </div>
+    </div>
+
+    <!-- Card Counting Practice Tab -->
+    <div id="counting-tab" class="tab-content">
+        <h2>🧮 Card Counting Practice</h2>
+        <p>Master different card counting systems with interactive practice sessions.</p>
+
+        <div class="controls-grid">
+            <div class="control-panel">
+                <h3>Practice Settings</h3>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #ffd700;">Counting System:</label>
+                    <select id="practice-system" style="width: 100%; padding: 8px; border-radius: 5px; border: 2px solid #ffd700; background: rgba(0,0,0,0.8); color: #fff;">
+                        <option value="Hi-Lo">Hi-Lo</option>
+                        <option value="KO">KO (Knock-Out)</option>
+                        <option value="Hi-Opt I">Hi-Opt I</option>
+                        <option value="Hi-Opt II">Hi-Opt II</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #ffd700;">Number of Cards:</label>
+                    <select id="practice-cards" style="width: 100%; padding: 8px; border-radius: 5px; border: 2px solid #ffd700; background: rgba(0,0,0,0.8); color: #fff;">
+                        <option value="10">10 cards</option>
+                        <option value="20" selected>20 cards</option>
+                        <option value="30">30 cards</option>
+                        <option value="52">Full deck</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="startCountingPractice()">Start Practice</button>
+            </div>
+
+            <div class="control-panel">
+                <h3>Your Count</h3>
+                <div style="text-align: center;">
+                    <input type="number" id="user-count-input" class="bankroll-input" value="0" style="font-size: 2rem; text-align: center; margin-bottom: 1rem;">
+                    <div>
+                        <button class="btn btn-primary" onclick="checkUserCount()">Check Count</button>
+                        <button class="btn btn-secondary" onclick="startCountingPractice()">New Round</button>
+                    </div>
+                </div>
+                <div id="count-feedback" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <h3>Practice Cards</h3>
+            <div class="cards-display" id="practice-cards-display"></div>
+        </div>
+
+        <div class="control-panel">
+            <h3>Card Values Reference</h3>
+            <div id="card-values-reference"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global application state
+        let currentSessionId = null;
+        let gameState = {};
+        let currentCountingSession = {
+            cards: [],
+            actualCount: 0,
+            system: 'Hi-Lo'
+        };
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            loadStrategyChart();
+            loadAnalytics();
+            updateBetDisplay();
+        });
+
+        function setupEventListeners() {
+            // Bet amount dropdown
+            document.getElementById('bet-amount').addEventListener('change', updateBetDisplay);
+            
+            // Starting bankroll
+            document.getElementById('starting-bankroll').addEventListener('change', function() {
+                if (!currentSessionId) {
+                    document.getElementById('current-bankroll').textContent = '$' + this.value;
+                    document.getElementById('session-profit').textContent = '$0';
+                }
+            });
+        }
+
+        function updateBetDisplay() {
+            const betAmount = document.getElementById('bet-amount').value;
+            document.getElementById('bet-display').textContent = '$' + betAmount;
+        }
+
+        // Tab management
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+
+            // Load tab-specific data
+            switch(tabName) {
+                case 'strategy':
+                    loadStrategyChart();
+                    break;
+                case 'monte-carlo':
+                    // Initialize Monte Carlo if needed
+                    break;
+                case 'analytics':
+                    loadAnalytics();
+                    break;
+                case 'counting':
+                    updateCardValuesReference();
+                    break;
+            }
+        }
+
+        // Game session management
+        async function startNewSession() {
+            try {
+                const bankroll = parseInt(document.getElementById('starting-bankroll').value);
+                const countingSystem = document.getElementById('counting-system').value;
+                
+                const response = await fetch('/api/new_session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        bankroll: bankroll,
+                        counting_system: countingSystem
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.session_id) {
+                    currentSessionId = data.session_id;
+                    gameState = data.game_state || {};
+                    updateGameDisplay();
+                    updateCountDisplay();
+                    showMessage('New session started! Ready to play.', 'success');
+                }
+            } catch (error) {
+                console.error('Session error:', error);
+            }
+        }
+
+        async function dealNewHand() {
+            try {
+                if (!currentSessionId) {
+                    await startNewSession();
+                }
+                
+                if (!currentSessionId) return;
+                
+                const betAmount = parseInt(document.getElementById('bet-amount').value);
+                
+                const response = await fetch('/api/place_bet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: currentSessionId,
+                        bet_amount: betAmount
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.game_state) {
+                    gameState = data.game_state;
+                    updateGameDisplay();
+                    updateCountDisplay();
+                    updateTableBankrollDisplay();
+                    
+                    // Hide AI recommendation - only show when hint button is pressed
+                    hideAIRecommendation();
+                    
+                    updateActionButtons();
+                    showMessage('Hand dealt! Make your move.', 'success');
+                }
+            } catch (error) {
+                console.error('Deal error:', error);
+            }
+        }
+
+        // Wrapper functions to handle async calls from onclick handlers
+        function handlePlayerAction(action) {
+            playerAction(action).catch(error => {
+                console.error('Player action error:', error);
+            });
+        }
+        
+        function handleStartNewSession() {
+            startNewSession().catch(error => {
+                console.error('Start session error:', error);
+            });
+        }
+        
+        function handleDealNewHand() {
+            dealNewHand().catch(error => {
+                console.error('Deal hand error:', error);
+            });
+        }
+        
+        function handleResetSession() {
+            resetSession();
+        }
+        
+        async function playerAction(action) {
+            try {
+                if (!currentSessionId || gameState.game_phase !== 'playing') return;
+                
+                const response = await fetch('/api/player_action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: currentSessionId,
+                        action: action,
+                        hand_index: gameState.current_hand
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.game_state) {
+                    gameState = data.game_state;
+                    updateGameDisplay();
+                    updateCountDisplay();
+                    updateTableBankrollDisplay();
+                    
+                    // Don't show AI recommendation automatically - only when hint button is pressed
+                    hideAIRecommendation();
+                    
+                    if (gameState.game_phase === 'complete') {
+                        enableActionButtons(false);
+                        showHandResults();
+                        loadAnalytics(); // Refresh analytics after hand
+                    }
+                }
+            } catch (error) {
+                console.error('Action error:', error);
+            }
+        }
+
+        function updateGameDisplay() {
+            try {
+                updateBankrollDisplay();
+                updateCards();
+                updateGameStatus();
+                updateActionButtons();
+            } catch (error) {
+                console.error('Error updating game display:', error);
+            }
+        }
+
+        function updateBankrollDisplay() {
+            if (gameState.current_bankroll !== undefined) {
+                document.getElementById('current-bankroll').textContent = '$' + gameState.current_bankroll;
+                document.getElementById('current-bankroll').style.color = gameState.current_bankroll > gameState.starting_bankroll ? '#00ff88' : '#ff4444';
+            }
+            
+            if (gameState.session_profit !== undefined) {
+                const profitEl = document.getElementById('session-profit');
+                profitEl.textContent = (gameState.session_profit >= 0 ? '+$' : '-$') + Math.abs(gameState.session_profit);
+                profitEl.style.color = gameState.session_profit >= 0 ? '#00ff88' : '#ff4444';
+            }
+        }
+
+        function updateCards() {
+            // Update dealer cards
+            const dealerCards = document.getElementById('dealer-cards');
+            const dealerValue = document.getElementById('dealer-value');
+            
+            dealerCards.innerHTML = '';
+            
+            if (gameState.dealer_hand && gameState.dealer_hand.cards) {
+                gameState.dealer_hand.cards.forEach((card, index) => {
+                    if (index === 1 && gameState.game_phase !== 'complete') {
+                        // Hide hole card
+                        dealerCards.appendChild(createCardBack());
+                    } else {
+                        dealerCards.appendChild(createCard(card));
+                    }
+                });
+                
+                if (gameState.game_phase === 'complete') {
+                    dealerValue.textContent = gameState.dealer_hand.value;
+                    if (gameState.dealer_hand.is_bust) {
+                        dealerValue.textContent += ' (BUST)';
+                        dealerValue.style.color = '#ff4444';
+                    }
+                } else {
+                    dealerValue.textContent = 'Showing: ' + (gameState.dealer_hand.cards[0] ? getCardValue(gameState.dealer_hand.cards[0]) : '--');
+                }
+            }
+
+            // Update player cards - show all hands for splits
+            const playerCards = document.getElementById('player-cards');
+            const playerValue = document.getElementById('player-value');
+            
+            playerCards.innerHTML = '';
+            
+            if (gameState.player_hands && gameState.player_hands.length > 0) {
+                // If multiple hands (split), show all hands
+                if (gameState.player_hands.length > 1) {
+                    gameState.player_hands.forEach((hand, index) => {
+                        const handDiv = document.createElement('div');
+                        handDiv.style.cssText = `
+                            display: inline-block; 
+                            margin: 0 10px; 
+                            padding: 10px; 
+                            border: ${index === gameState.current_hand ? '3px solid #ffd700' : '2px solid #666'}; 
+                            border-radius: 10px; 
+                            background: rgba(0,0,0,0.5);
+                        `;
+                        
+                        const handLabel = document.createElement('div');
+                        handLabel.textContent = `Hand ${index + 1}`;
+                        handLabel.style.cssText = 'color: #ffd700; font-weight: bold; margin-bottom: 5px; text-align: center;';
+                        handDiv.appendChild(handLabel);
+                        
+                        const handCards = document.createElement('div');
+                        handCards.style.cssText = 'display: flex; gap: 5px; justify-content: center; margin-bottom: 5px;';
+                        hand.cards.forEach(card => {
+                            handCards.appendChild(createCard(card));
+                        });
+                        handDiv.appendChild(handCards);
+                        
+                        const handValue = document.createElement('div');
+                        handValue.textContent = hand.value;
+                        handValue.style.cssText = 'text-align: center; font-weight: bold; color: #fff;';
+                        
+                        if (hand.is_blackjack) {
+                            handValue.textContent += ' (BJ!)';
+                            handValue.style.color = '#ffd700';
+                        } else if (hand.is_bust) {
+                            handValue.textContent += ' (BUST)';
+                            handValue.style.color = '#ff4444';
+                        }
+                        
+                        if (hand.is_soft) {
+                            handValue.textContent += ' (Soft)';
+                        }
+                        
+                        handDiv.appendChild(handValue);
+                        playerCards.appendChild(handDiv);
+                    });
+                    
+                    // Update main player value to show current hand
+                    const currentHand = gameState.player_hands[gameState.current_hand] || gameState.player_hands[0];
+                    playerValue.textContent = `Playing Hand ${(gameState.current_hand || 0) + 1}: ${currentHand.value}`;
+                    playerValue.style.color = '#ffd700';
+                } else {
+                    // Single hand display
+                    const currentHand = gameState.player_hands[0];
+                    
+                    currentHand.cards.forEach(card => {
+                        playerCards.appendChild(createCard(card));
+                    });
+                    
+                    playerValue.textContent = currentHand.value;
+                    
+                    if (currentHand.is_blackjack) {
+                        playerValue.textContent += ' (BLACKJACK!)';
+                        playerValue.style.color = '#ffd700';
+                    } else if (currentHand.is_bust) {
+                        playerValue.textContent += ' (BUST)';
+                        playerValue.style.color = '#ff4444';
+                    } else {
+                        playerValue.style.color = '#fff';
+                    }
+                    
+                    if (currentHand.is_soft) {
+                        playerValue.textContent += ' (Soft)';
+                    }
+                }
+            }
+        }
+
+        function updateCountDisplay() {
+            const runningCountEl = document.getElementById('running-count');
+            const trueCountEl = document.getElementById('true-count');
+            const recommendedBetEl = document.getElementById('recommended-bet');
+            const deckPenetrationEl = document.getElementById('deck-penetration');
+            
+            if (gameState.running_count !== undefined && runningCountEl) {
+                runningCountEl.textContent = gameState.running_count;
+            }
+            if (gameState.true_count !== undefined && trueCountEl) {
+                trueCountEl.textContent = gameState.true_count;
+            }
+            if (gameState.betting_recommendation !== undefined && recommendedBetEl) {
+                recommendedBetEl.textContent = '$' + gameState.betting_recommendation;
+            }
+            if (gameState.deck_penetration !== undefined && deckPenetrationEl) {
+                deckPenetrationEl.textContent = gameState.deck_penetration + '%';
+            }
+        }
+
+        function updateTableBankrollDisplay() {
+            const tableBankrollEl = document.getElementById('table-bankroll-display');
+            const tableProfitEl = document.getElementById('table-profit-display');
+            
+            if (gameState && tableBankrollEl) {
+                const bankroll = gameState.current_bankroll || 1000;
+                const profit = gameState.session_profit || 0;
+                
+                tableBankrollEl.textContent = `$${bankroll}`;
+                tableProfitEl.textContent = `Session: ${profit >= 0 ? '+' : ''}$${profit}`;
+                
+                // Color code the profit display
+                tableProfitEl.style.color = profit >= 0 ? '#00ff88' : '#ff4444';
+            }
+        }
+
+        function updateGameStatus() {
+            const statusEl = document.getElementById('game-status-display');
+            
+            if (!statusEl) {
+                console.log('Game status element not found, skipping status update');
+                return;
+            }
+            
+            if (gameState.game_phase === 'betting') {
+                statusEl.innerHTML = '<p>Place your bet and click "Deal Cards" to start!</p>';
+            } else if (gameState.game_phase === 'playing') {
+                statusEl.innerHTML = '<p>Your turn - choose an action!</p>';
+            } else if (gameState.game_phase === 'complete') {
+                statusEl.innerHTML = '<p>Hand complete. Ready for next hand!</p>';
+            }
+        }
+
+        function updateActionButtons() {
+            console.log('Updating action buttons, game state:', gameState);
+            const isPlaying = gameState && gameState.game_phase === 'playing';
+            const dealButton = document.getElementById('deal-button');
+            
+            // Action buttons
+            const hitBtn = document.getElementById('hit-btn');
+            const standBtn = document.getElementById('stand-btn');
+            const doubleBtn = document.getElementById('double-btn');
+            const splitBtn = document.getElementById('split-btn');
+            
+            if (isPlaying && gameState.player_hands && gameState.player_hands.length > 0) {
+                console.log('Enabling action buttons - game is playing');
+                const currentHand = gameState.player_hands[gameState.current_hand || 0];
+                const canDouble = currentHand && currentHand.can_double && gameState.current_bankroll >= currentHand.bet;
+                const canSplit = currentHand && currentHand.can_split && gameState.current_bankroll >= currentHand.bet;
+                
+                hitBtn.disabled = false;
+                standBtn.disabled = false;
+                doubleBtn.disabled = !canDouble;
+                splitBtn.disabled = !canSplit;
+                dealButton.disabled = true;
+                
+                console.log('Double available:', canDouble, 'Split available:', canSplit);
+            } else {
+                console.log('Disabling action buttons - not playing or no hands');
+                hitBtn.disabled = true;
+                standBtn.disabled = true;
+                doubleBtn.disabled = true;
+                splitBtn.disabled = true;
+                dealButton.disabled = false;
+            }
+        }
+
+        function enableActionButtons(enable) {
+            // This function is now handled by updateActionButtons()
+            updateActionButtons();
+        }
+
+        function createCard(card) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = `card ${getCardColor(card.suit)}`;
+            
+            const suit = getSuitSymbol(card.suit);
+            cardDiv.innerHTML = `
+                <div>${card.rank}</div>
+                <div style="text-align: center; font-size: 28px; margin: auto;">${suit}</div>
+                <div style="transform: rotate(180deg);">${card.rank}</div>
+            `;
+            
+            return cardDiv;
+        }
+
+        function createCardBack() {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card card-back';
+            cardDiv.innerHTML = '';
+            return cardDiv;
+        }
+
+        function getCardColor(suit) {
+            return ['hearts', 'diamonds'].includes(suit) ? 'red' : 'black';
+        }
+
+        function getSuitSymbol(suit) {
+            const symbols = {
+                'hearts': '♥',
+                'diamonds': '♦',
+                'clubs': '♣',
+                'spades': '♠'
+            };
+            return symbols[suit] || suit;
+        }
+
+        function getCardValue(card) {
+            if (['J', 'Q', 'K'].includes(card.rank)) return 10;
+            if (card.rank === 'A') return 11;
+            return parseInt(card.rank);
+        }
+
+        function showAIRecommendation(recommendation) {
+            const aiDiv = document.getElementById('ai-recommendation');
+            const actionEl = document.getElementById('ai-action');
+            const reasoningEl = document.getElementById('ai-reasoning');
+            
+            if (recommendation && recommendation.action) {
+                actionEl.textContent = `AI Recommends: ${recommendation.action.toUpperCase()}`;
+                reasoningEl.textContent = recommendation.reasoning || `Confidence: ${Math.round((recommendation.confidence || 0.8) * 100)}%`;
+                aiDiv.classList.remove('hidden');
+            }
+        }
+
+        function hideAIRecommendation() {
+            document.getElementById('ai-recommendation').classList.add('hidden');
+        }
+
+        function showAIHint() {
+            if (!currentSessionId || gameState.game_phase !== 'playing') {
+                showMessage('No active hand to get hint for', 'warning');
+                return;
+            }
+
+            // Get current AI recommendation and show it
+            if (gameState.player_hands && gameState.dealer_hand) {
+                // Make a request to get AI recommendation
+                fetch('/api/player_action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: currentSessionId,
+                        action: 'get_hint'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ai_recommendation) {
+                        showAIRecommendation(data.ai_recommendation);
+                    }
+                })
+                .catch(error => {
+                    showMessage('Error getting AI hint', 'error');
+                });
+            }
+        }
+
+        function checkCountGuess() {
+            const userGuess = parseInt(document.getElementById('count-guess-input').value);
+            const feedbackDiv = document.getElementById('count-guess-feedback');
+            
+            if (isNaN(userGuess)) {
+                feedbackDiv.innerHTML = '<span style="color: #ff4444;">Enter a valid number</span>';
+                return;
+            }
+
+            if (gameState.running_count !== undefined) {
+                const actualCount = gameState.running_count;
+                const isCorrect = userGuess === actualCount;
+                
+                if (isCorrect) {
+                    feedbackDiv.innerHTML = '<span style="color: #00ff88;">Correct!</span>';
+                    // Show count information panel
+                    document.getElementById('count-display-panel').classList.remove('hidden');
+                    // Update the count display
+                    updateCountDisplay();
+                } else {
+                    feedbackDiv.innerHTML = `<span style="color: #ff4444;">Wrong. Actual: ${actualCount}</span>`;
+                }
+                
+                // Clear input after 2 seconds
+                setTimeout(() => {
+                    document.getElementById('count-guess-input').value = '';
+                    feedbackDiv.innerHTML = '';
+                }, 2000);
+            } else {
+                feedbackDiv.innerHTML = '<span style="color: #ff4444;">No active game</span>';
+            }
+        }
+
+        function hideCountDisplay() {
+            document.getElementById('count-display-panel').classList.add('hidden');
+        }
+
+        function showHandResults() {
+            if (!gameState || gameState.game_phase !== 'complete') {
+                return;
+            }
+
+            const playerHand = gameState.player_hands && gameState.player_hands[0];
+            const dealerHand = gameState.dealer_hand;
+            
+            if (!playerHand || !dealerHand) {
+                return;
+            }
+
+            let message = '';
+            let messageType = '';
+
+            // Determine hand outcome and show appropriate message
+            if (playerHand.is_bust) {
+                message = 'Player busted! Dealer wins.';
+                messageType = 'error';
+            } else if (dealerHand.is_bust) {
+                message = 'Dealer bust! You win!';
+                messageType = 'success';
+            } else if (playerHand.is_blackjack && !dealerHand.is_blackjack) {
+                message = 'Blackjack! You win!';
+                messageType = 'success';
+            } else if (dealerHand.is_blackjack && !playerHand.is_blackjack) {
+                message = 'Dealer blackjack! Dealer wins.';
+                messageType = 'error';
+            } else if (playerHand.value > dealerHand.value) {
+                message = 'You win!';
+                messageType = 'success';
+            } else if (dealerHand.value > playerHand.value) {
+                message = 'Dealer wins!';
+                messageType = 'error';
+            } else {
+                message = 'Push (tie)!';
+                messageType = 'info';
+            }
+
+            // Show the result message
+            console.log('Showing hand result:', message, messageType);
+            showMessage(message, messageType);
+            
+            setTimeout(() => {
+                hideAIRecommendation();
+            }, 3000);
+        }
+
+        function resetSession() {
+            currentSessionId = null;
+            gameState = {};
+            
+            const startingBankroll = document.getElementById('starting-bankroll').value;
+            document.getElementById('current-bankroll').textContent = '$' + startingBankroll;
+            document.getElementById('session-profit').textContent = '$0';
+            
+            // Clear game display
+            document.getElementById('dealer-cards').innerHTML = '';
+            document.getElementById('player-cards').innerHTML = '';
+            document.getElementById('dealer-value').textContent = '--';
+            document.getElementById('player-value').textContent = '--';
+            
+            // Reset count display
+            document.getElementById('running-count').textContent = '0';
+            document.getElementById('true-count').textContent = '0.0';
+            document.getElementById('recommended-bet').textContent = '$10';
+            document.getElementById('deck-penetration').textContent = '0%';
+            
+            enableActionButtons(false);
+            hideAIRecommendation();
+            
+            showMessage('Session reset successfully!', 'info');
+        }
+
+        // Strategy chart functions - removed duplicate, using enhanced version below
+
+        function createBasicStrategyCharts(data, container) {
+            // Hard totals chart
+            if (data.hard_totals) {
+                const hardTotalsChart = createStrategyTable('Hard Totals', data.hard_totals);
+                container.appendChild(hardTotalsChart);
+            }
+            
+            // Soft totals chart
+            if (data.soft_totals) {
+                const softTotalsChart = createStrategyTable('Soft Totals', data.soft_totals);
+                container.appendChild(softTotalsChart);
+            }
+            
+            // Pairs chart
+            if (data.pairs) {
+                const pairsChart = createStrategyTable('Pairs', data.pairs);
+                container.appendChild(pairsChart);
+            }
+        }
+
+        function createDeviationCharts(data, container) {
+            // Hi-Lo Deviations
+            if (data.hi_lo_deviations) {
+                const deviationDiv = document.createElement('div');
+                deviationDiv.className = 'control-panel';
+                deviationDiv.innerHTML = '<h3>Hi-Lo Playing Deviations</h3>';
+                
+                const table = document.createElement('table');
+                table.className = 'strategy-table';
+                table.style.cssText = 'background: rgba(0,0,0,0.9); border: 2px solid #ffd700;';
+                
+                const thead = document.createElement('thead');
+                thead.innerHTML = `
+                    <tr style="background: #ffd700; color: #000;">
+                        <th style="padding: 12px; font-weight: bold;">Hand vs Dealer</th>
+                        <th style="padding: 12px; font-weight: bold;">True Count</th>
+                        <th style="padding: 12px; font-weight: bold;">Action</th>
+                    </tr>
+                `;
+                table.appendChild(thead);
+                
+                const tbody = document.createElement('tbody');
+                Object.entries(data.hi_lo_deviations).forEach(([situation, deviation]) => {
+                    const row = document.createElement('tr');
+                    row.style.cssText = 'border-bottom: 1px solid #333;';
+                    row.innerHTML = `
+                        <td style="padding: 10px; background: rgba(255,215,0,0.1); color: #fff; font-weight: bold;">${situation.replace('_', ' vs ')}</td>
+                        <td style="padding: 10px; color: #ffd700; text-align: center;">+${deviation.tc_threshold}</td>
+                        <td style="padding: 10px; color: #fff;">${deviation.action}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                table.appendChild(tbody);
+                deviationDiv.appendChild(table);
+                container.appendChild(deviationDiv);
+            }
+            
+            // Insurance Section
+            if (data.insurance) {
+                const insuranceDiv = document.createElement('div');
+                insuranceDiv.className = 'control-panel';
+                insuranceDiv.innerHTML = `
+                    <h3>Insurance & Surrender</h3>
+                    <div style="background: rgba(0,0,0,0.9); padding: 15px; border: 2px solid #ffd700; border-radius: 10px;">
+                        <p><strong style="color: #ffd700;">Insurance:</strong> Take at True Count +${data.insurance.tc_threshold} or higher</p>
+                    </div>
+                `;
+                container.appendChild(insuranceDiv);
+            }
+            
+            // Surrender Section
+            if (data.surrender) {
+                const surrenderDiv = document.createElement('div');
+                surrenderDiv.className = 'control-panel';
+                surrenderDiv.innerHTML = '<h3>Surrender Deviations</h3>';
+                
+                const table = document.createElement('table');
+                table.className = 'strategy-table';
+                table.style.cssText = 'background: rgba(0,0,0,0.9); border: 2px solid #ffd700;';
+                
+                const thead = document.createElement('thead');
+                thead.innerHTML = `
+                    <tr style="background: #ffd700; color: #000;">
+                        <th style="padding: 12px; font-weight: bold;">Hand vs Dealer</th>
+                        <th style="padding: 12px; font-weight: bold;">True Count</th>
+                        <th style="padding: 12px; font-weight: bold;">Action</th>
+                    </tr>
+                `;
+                table.appendChild(thead);
+                
+                const tbody = document.createElement('tbody');
+                Object.entries(data.surrender).forEach(([situation, deviation]) => {
+                    const row = document.createElement('tr');
+                    row.style.cssText = 'border-bottom: 1px solid #333;';
+                    row.innerHTML = `
+                        <td style="padding: 10px; background: rgba(255,215,0,0.1); color: #fff; font-weight: bold;">${situation.replace('_', ' vs ')}</td>
+                        <td style="padding: 10px; color: #ffd700; text-align: center;">${deviation.tc_threshold >= 0 ? '+' : ''}${deviation.tc_threshold}</td>
+                        <td style="padding: 10px; color: #fff;">${deviation.action}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                table.appendChild(tbody);
+                surrenderDiv.appendChild(table);
+                container.appendChild(surrenderDiv);
+            }
+        }
+
+        function createStrategyTable(title, data) {
+            const container = document.createElement('div');
+            container.className = 'control-panel';
+            container.innerHTML = `<h3>${title}</h3>`;
+            
+            const tableContainer = document.createElement('div');
+            tableContainer.className = 'strategy-container';
+            
+            const table = document.createElement('table');
+            table.className = 'strategy-table';
+            
+            // Create header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            headerRow.innerHTML = `
+                <th>Player</th>
+                <th>2</th><th>3</th><th>4</th><th>5</th><th>6</th>
+                <th>7</th><th>8</th><th>9</th><th>10</th><th>A</th>
+            `;
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // Create body
+            const tbody = document.createElement('tbody');
+            Object.entries(data).forEach(([playerTotal, actions]) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td style="background: #ffd700; color: #000; font-weight: bold;">${playerTotal}</td>`;
+                
+                Object.values(actions).forEach(action => {
+                    const cell = document.createElement('td');
+                    cell.textContent = action;
+                    cell.className = `action-${action}`;
+                    row.appendChild(cell);
+                });
+                
+                tbody.appendChild(row);
+            });
+            
+            table.appendChild(tbody);
+            tableContainer.appendChild(table);
+            container.appendChild(tableContainer);
+            
+            return container;
+        }
+
+        // Monte Carlo simulation
+        async function runMonteCarloSimulation() {
+            const button = document.getElementById('mc-button-text');
+            const originalText = button.textContent;
+            button.innerHTML = '<span class="loading"></span>Running...';
+            
+            const numHands = parseInt(document.getElementById('mc-hands').value);
+            const bettingStrategy = document.getElementById('mc-betting').value;
+            const countingSystem = document.getElementById('mc-counting').value;
+            
+            try {
+                const response = await fetch('/api/monte_carlo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        num_hands: numHands,
+                        betting_strategy: bettingStrategy,
+                        counting_system: countingSystem
+                    })
+                });
+                
+                const data = await response.json();
+                displayMonteCarloResults(data);
+                document.getElementById('monte-carlo-results').classList.remove('hidden');
+                
+            } catch (error) {
+                showMessage('Error running Monte Carlo simulation', 'error');
+            } finally {
+                button.textContent = originalText;
+            }
+        }
+
+        function displayMonteCarloResults(data) {
+            const resultsGrid = document.getElementById('mc-results-grid');
+            resultsGrid.innerHTML = '';
+            
+            // Main metrics
+            const metrics = [
+                { label: 'Total Hands', value: data.total_hands.toLocaleString() },
+                { label: 'Win Rate', value: data.win_rate + '%' },
+                { label: 'Net Result', value: '$' + data.net_result.toLocaleString() },
+                { label: 'House Edge', value: data.house_edge + '%' },
+                { label: 'Hourly EV', value: '$' + data.hourly_ev },
+                { label: 'Risk of Ruin', value: data.risk_of_ruin + '%' }
+            ];
+            
+            metrics.forEach(metric => {
+                const card = document.createElement('div');
+                card.className = 'metric-card';
+                card.innerHTML = `
+                    <div class="metric-value">${metric.value}</div>
+                    <div class="metric-label">${metric.label}</div>
+                `;
+                resultsGrid.appendChild(card);
+            });
+            
+            // Additional results
+            const additionalResults = document.createElement('div');
+            additionalResults.style.cssText = 'margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;';
+            
+            const breakdownCard = document.createElement('div');
+            breakdownCard.style.cssText = 'background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; border: 2px solid #ffd700;';
+            breakdownCard.innerHTML = `
+                <h4 style="color: #ffd700; margin-bottom: 15px;">Hand Breakdown</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>Wins: <span style="color: #27ae60;">${data.wins}</span></div>
+                    <div>Losses: <span style="color: #e74c3c;">${data.losses}</span></div>
+                    <div>Pushes: <span style="color: #f39c12;">${data.pushes}</span></div>
+                    <div>Blackjacks: <span style="color: #ffd700;">${data.blackjacks}</span></div>
+                </div>
+            `;
+            
+            const strategyCard = document.createElement('div');
+            strategyCard.style.cssText = 'background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; border: 2px solid #ffd700;';
+            strategyCard.innerHTML = `
+                <h4 style="color: #ffd700; margin-bottom: 15px;">Strategy Analysis</h4>
+                <div>
+                    <div>Betting Strategy: <span style="color: #00bfff;">${data.betting_strategy}</span></div>
+                    <div>Counting System: <span style="color: #00bfff;">${data.counting_system}</span></div>
+                    <div>Final Bankroll: <span style="color: ${data.final_bankroll > 1000 ? '#27ae60' : '#e74c3c'};">$${data.final_bankroll}</span></div>
+                    <div>Max Drawdown: <span style="color: #e74c3c;">$${data.max_drawdown}</span></div>
+                </div>
+            `;
+            
+            additionalResults.appendChild(breakdownCard);
+            additionalResults.appendChild(strategyCard);
+            resultsGrid.appendChild(additionalResults);
+        }
+
+        // Analytics functions
+        async function loadAnalytics() {
+            if (!currentSessionId) {
+                displayEmptyAnalytics();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/analytics?session_id=${currentSessionId}`);
+                const data = await response.json();
+                displayAnalytics(data);
+                
+            } catch (error) {
+                showMessage('Error loading analytics', 'error');
+            }
+        }
+
+        function displayAnalytics(data) {
+            const summaryGrid = document.getElementById('analytics-summary');
+            summaryGrid.innerHTML = '';
+            
+            // Use real game state data for comprehensive analytics
+            const totalHands = gameState.hands_played || 0;
+            const handsWon = gameState.stats.hands_won || 0;
+            const winRate = totalHands > 0 ? Math.round((handsWon / totalHands) * 100) : 0;
+            const sessionProfit = gameState.session_profit || 0;
+            const totalWagered = gameState.stats.total_wagered || 0;
+            const blackjacks = gameState.stats.blackjacks || 0;
+            const currentBankroll = gameState.current_bankroll || 1000;
+            
+            const metrics = [
+                { 
+                    label: 'Hands Played', 
+                    value: totalHands,
+                    color: '#3498db'
+                },
+                { 
+                    label: 'Win Rate', 
+                    value: winRate + '%',
+                    color: winRate >= 45 ? '#27ae60' : winRate >= 40 ? '#f39c12' : '#e74c3c'
+                },
+                { 
+                    label: 'Session P&L', 
+                    value: (sessionProfit >= 0 ? '+$' : '-$') + Math.abs(sessionProfit),
+                    color: sessionProfit >= 0 ? '#27ae60' : '#e74c3c'
+                },
+                { 
+                    label: 'Total Wagered', 
+                    value: '$' + totalWagered.toLocaleString(),
+                    color: '#9b59b6'
+                },
+                { 
+                    label: 'Blackjacks', 
+                    value: blackjacks,
+                    color: '#ffd700'
+                },
+                { 
+                    label: 'Current Bankroll', 
+                    value: '$' + currentBankroll.toLocaleString(),
+                    color: currentBankroll >= 1000 ? '#27ae60' : '#e74c3c'
+                }
+            ];
+            
+            metrics.forEach(metric => {
+                const card = document.createElement('div');
+                card.className = 'metric-card';
+                card.style.border = `2px solid ${metric.color}`;
+                card.innerHTML = `
+                    <div class="metric-value" style="color: ${metric.color};">${metric.value}</div>
+                    <div class="metric-label">${metric.label}</div>
+                `;
+                summaryGrid.appendChild(card);
+            });
+            
+            // Enhanced decision accuracy visualization
+            const accuracyDiv = document.getElementById('decision-accuracy-breakdown');
+            const decisions = gameState.stats.decisions || [];
+            
+            if (decisions.length === 0) {
+                accuracyDiv.innerHTML = '<p style="color: #666; text-align: center; padding: 2rem;">Play some hands to see decision accuracy analysis</p>';
+            } else {
+                const actionTypes = ['hit', 'stand', 'double', 'split'];
+                const accuracyByAction = {};
+                
+                actionTypes.forEach(action => {
+                    const actionDecisions = decisions.filter(d => d.action === action);
+                    const correct = actionDecisions.filter(d => d.correct).length;
+                    const total = actionDecisions.length;
+                    accuracyByAction[action] = {
+                        accuracy: total > 0 ? Math.round((correct / total) * 100) : 0,
+                        total: total,
+                        correct: correct
+                    };
+                });
+                
+                const overallAccuracy = Math.round((decisions.filter(d => d.correct).length / decisions.length) * 100);
+                
+                accuracyDiv.innerHTML = `
+                    <div style="margin-bottom: 2rem;">
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(255,215,0,0.1); border-radius: 10px; border: 2px solid #ffd700; margin-bottom: 1.5rem;">
+                            <div style="font-size: 2.5rem; font-weight: bold; color: #ffd700;">${overallAccuracy}%</div>
+                            <div style="color: #fff; font-size: 1.1rem;">Overall Decision Accuracy</div>
+                            <div style="color: #999; font-size: 0.9rem; margin-top: 0.5rem;">${decisions.filter(d => d.correct).length} correct out of ${decisions.length} decisions</div>
+                        </div>
+                        
+                        <h4 style="color: #ffd700; margin-bottom: 1rem; text-align: center;">Accuracy by Action Type</h4>
+                        ${actionTypes.map(action => {
+                            const stats = accuracyByAction[action];
+                            const color = stats.accuracy >= 90 ? '#27ae60' : stats.accuracy >= 75 ? '#f39c12' : '#e74c3c';
+                            return `
+                                <div style="margin: 1rem 0; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px; border-left: 4px solid ${color};">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                        <span style="text-transform: capitalize; font-weight: bold; font-size: 1.1rem;">${action}</span>
+                                        <span style="color: ${color}; font-weight: bold; font-size: 1.3rem;">${stats.accuracy}%</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="flex: 1; margin-right: 1rem;">
+                                            <div style="width: 100%; height: 12px; background: #333; border-radius: 6px; overflow: hidden;">
+                                                <div style="width: ${stats.accuracy}%; height: 100%; background: ${color}; transition: width 0.5s ease; border-radius: 6px;"></div>
+                                            </div>
+                                        </div>
+                                        <span style="color: #999; font-size: 0.9rem;">${stats.correct}/${stats.total}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+            
+            // Enhanced counting performance with visual indicators
+            const countingDiv = document.getElementById('counting-performance-analysis');
+            const runningCount = gameState.running_count || 0;
+            const trueCount = gameState.true_count || 0;
+            const deckPenetration = gameState.deck_penetration || 0;
+            const bettingRec = gameState.betting_recommendation || 10;
+            
+            countingDiv.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                    <div style="text-align: center; padding: 1.5rem; background: rgba(52,152,219,0.2); border-radius: 10px; border: 2px solid #3498db;">
+                        <div style="font-size: 2.2rem; font-weight: bold; color: #3498db;">${runningCount}</div>
+                        <div style="color: #fff; font-size: 1rem; margin-top: 0.5rem;">Running Count</div>
+                    </div>
+                    <div style="text-align: center; padding: 1.5rem; background: rgba(231,76,60,0.2); border-radius: 10px; border: 2px solid #e74c3c;">
+                        <div style="font-size: 2.2rem; font-weight: bold; color: #e74c3c;">${trueCount.toFixed(1)}</div>
+                        <div style="color: #fff; font-size: 1rem; margin-top: 0.5rem;">True Count</div>
+                    </div>
+                    <div style="text-align: center; padding: 1.5rem; background: rgba(255,215,0,0.2); border-radius: 10px; border: 2px solid #ffd700;">
+                        <div style="font-size: 2.2rem; font-weight: bold; color: #ffd700;">$${bettingRec}</div>
+                        <div style="color: #fff; font-size: 1rem; margin-top: 0.5rem;">Recommended Bet</div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <span style="font-weight: bold;">Deck Penetration:</span>
+                        <span style="font-weight: bold; color: #ffd700;">${deckPenetration.toFixed(1)}%</span>
+                    </div>
+                    <div style="width: 100%; height: 20px; background: #333; border-radius: 10px; overflow: hidden; border: 2px solid #666;">
+                        <div style="width: ${deckPenetration}%; height: 100%; background: linear-gradient(90deg, #27ae60 0%, #f39c12 50%, #e74c3c 100%); transition: width 0.5s ease; display: flex; align-items: center; justify-content: center;">
+                            <span style="color: #000; font-weight: bold; font-size: 0.8rem; text-shadow: 1px 1px 2px rgba(255,255,255,0.8);">${deckPenetration.toFixed(1)}%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="padding: 1.5rem; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid #666;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <h4 style="color: #ffd700; margin-bottom: 1rem;">Count Analysis</h4>
+                            <div style="margin-bottom: 0.8rem;">
+                                <strong>Status:</strong> 
+                                <span style="color: ${trueCount > 1 ? '#27ae60' : trueCount < -1 ? '#e74c3c' : '#f39c12'};">
+                                    ${trueCount > 1 ? 'Favorable' : trueCount < -1 ? 'Unfavorable' : 'Neutral'}
+                                </span>
+                            </div>
+                            <div style="margin-bottom: 0.8rem;">
+                                <strong>Player Advantage:</strong> 
+                                <span style="color: ${trueCount > 0 ? '#27ae60' : '#e74c3c'};">
+                                    ${trueCount > 0 ? '+' : ''}${(trueCount * 0.5).toFixed(1)}%
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="color: #ffd700; margin-bottom: 1rem;">Betting Strategy</h4>
+                            <div style="margin-bottom: 0.8rem;">
+                                <strong>Unit Size:</strong> $10
+                            </div>
+                            <div style="margin-bottom: 0.8rem;">
+                                <strong>Betting Units:</strong> ${Math.max(1, Math.round(trueCount))}
+                            </div>
+                            <div style="font-size: 0.9rem; color: #999; line-height: 1.4;">
+                                ${trueCount > 2 ? 'Strong positive count - increase bet size significantly' : 
+                                  trueCount > 1 ? 'Positive count - consider moderate bet increase' :
+                                  trueCount < -1 ? 'Negative count - minimum bet recommended' :
+                                  'Neutral count - standard betting strategy'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Enhanced recent hands analysis
+            const recentDiv = document.getElementById('recent-hands-analysis');
+            const handsLost = gameState.stats.hands_lost || 0;
+            const handsPushed = gameState.stats.hands_pushed || 0;
+            const doublesWon = gameState.stats.doubles_won || 0;
+            const splitsWon = gameState.stats.splits_won || 0;
+            
+            recentDiv.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                    <div style="text-align: center; padding: 1.5rem; background: rgba(39,174,96,0.2); border-radius: 10px; border: 2px solid #27ae60;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #27ae60;">${handsWon}</div>
+                        <div style="color: #fff; font-size: 1rem; margin-top: 0.5rem;">Wins</div>
+                    </div>
+                    <div style="text-align: center; padding: 1.5rem; background: rgba(231,76,60,0.2); border-radius: 10px; border: 2px solid #e74c3c;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #e74c3c;">${handsLost}</div>
+                        <div style="color: #fff; font-size: 1rem; margin-top: 0.5rem;">Losses</div>
+                    </div>
+                    <div style="text-align: center; padding: 1.5rem; background: rgba(243,156,18,0.2); border-radius: 10px; border: 2px solid #f39c12;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #f39c12;">${handsPushed}</div>
+                        <div style="color: #fff; font-size: 1rem; margin-top: 0.5rem;">Pushes</div>
+                    </div>
+                    <div style="text-align: center; padding: 1.5rem; background: rgba(255,215,0,0.2); border-radius: 10px; border: 2px solid #ffd700;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #ffd700;">${blackjacks}</div>
+                        <div style="color: #fff; font-size: 1rem; margin-top: 0.5rem;">Blackjacks</div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div style="padding: 1.5rem; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid #666;">
+                        <h4 style="color: #ffd700; margin-bottom: 1rem;">Session Performance</h4>
+                        <div style="margin-bottom: 0.8rem;">
+                            <strong>Win Rate:</strong> <span style="color: ${winRate >= 45 ? '#27ae60' : '#e74c3c'};">${winRate}%</span>
+                        </div>
+                        <div style="margin-bottom: 0.8rem;">
+                            <strong>Total Hands:</strong> ${totalHands}
+                        </div>
+                        <div style="margin-bottom: 0.8rem;">
+                            <strong>Profit/Loss:</strong> 
+                            <span style="color: ${sessionProfit >= 0 ? '#27ae60' : '#e74c3c'};">
+                                ${sessionProfit >= 0 ? '+' : ''}$${sessionProfit}
+                            </span>
+                        </div>
+                        <div style="margin-bottom: 0.8rem;">
+                            <strong>ROI:</strong> 
+                            <span style="color: ${totalWagered > 0 && (sessionProfit/totalWagered) >= 0 ? '#27ae60' : '#e74c3c'};">
+                                ${totalWagered > 0 ? ((sessionProfit/totalWagered)*100).toFixed(1) + '%' : '0%'}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 1.5rem; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid #666;">
+                        <h4 style="color: #ffd700; margin-bottom: 1rem;">Advanced Statistics</h4>
+                        <div style="margin-bottom: 0.8rem;">
+                            <strong>Doubles Won:</strong> <span style="color: #27ae60;">${doublesWon}</span>
+                        </div>
+                        <div style="margin-bottom: 0.8rem;">
+                            <strong>Splits Won:</strong> <span style="color: #27ae60;">${splitsWon}</span>
+                        </div>
+                        <div style="margin-bottom: 0.8rem;">
+                            <strong>Total Wagered:</strong> $${totalWagered.toLocaleString()}
+                        </div>
+                        <div style="margin-bottom: 0.8rem;">
+                            <strong>Average Bet:</strong> $${totalHands > 0 ? (totalWagered/totalHands).toFixed(0) : '0'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayEmptyAnalytics() {
+            const summaryGrid = document.getElementById('analytics-summary');
+            summaryGrid.innerHTML = '<div class="metric-card" style="grid-column: 1 / -1;"><div class="metric-label">Play some hands to see your analytics!</div></div>';
+        }
+
+        // Card counting practice
+        async function startCountingPractice() {
+            const system = document.getElementById('practice-system').value;
+            const numCards = parseInt(document.getElementById('practice-cards').value);
+            
+            try {
+                const response = await fetch('/api/card_counting_practice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        system: system,
+                        num_cards: numCards
+                    })
+                });
+                
+                const data = await response.json();
+                
+                currentCountingSession = {
+                    cards: data.cards,
+                    actualCount: data.running_count,
+                    system: system
+                };
+                
+                displayPracticeCards(data.cards);
+                document.getElementById('user-count-input').value = 0;
+                document.getElementById('count-feedback').innerHTML = '';
+                
+            } catch (error) {
+                showMessage('Error starting counting practice', 'error');
+            }
+        }
+
+        function displayPracticeCards(cards) {
+            const container = document.getElementById('practice-cards-display');
+            container.innerHTML = '';
+            
+            cards.forEach(card => {
+                container.appendChild(createCard(card));
+            });
+        }
+
+        async function checkUserCount() {
+            const userCount = parseInt(document.getElementById('user-count-input').value);
+            
+            try {
+                const response = await fetch('/api/validate_count', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_count: userCount,
+                        cards: currentCountingSession.cards,
+                        system: currentCountingSession.system
+                    })
+                });
+                
+                const data = await response.json();
+                
+                const feedbackDiv = document.getElementById('count-feedback');
+                
+                if (data.correct) {
+                    feedbackDiv.innerHTML = `<div class="message success">Correct! Running count is ${data.actual_count}</div>`;
+                } else {
+                    feedbackDiv.innerHTML = `<div class="message error">
+                        Incorrect. Your guess: ${data.user_count}, Actual count: ${data.actual_count}<br>
+                        Accuracy: ${data.accuracy}%
+                    </div>`;
+                }
+                
+            } catch (error) {
+                showMessage('Error checking count', 'error');
+            }
+        }
+
+        function updateCardValuesReference() {
+            const system = document.getElementById('practice-system').value;
+            const referenceDiv = document.getElementById('card-values-reference');
+            
+            const cardValues = {
+                'Hi-Lo': { '2-6': '+1', '7-9': '0', '10-A': '-1' },
+                'KO': { '2-7': '+1', '8-9': '0', '10-A': '-1' },
+                'Hi-Opt I': { '3-6': '+1', '7-9': '0', '10-K': '-1', 'A': '0' },
+                'Hi-Opt II': { '2,3,6,7': '+1', '4,5': '+2', '8,9': '0', '10-K': '-2', 'A': '0' }
+            };
+            
+            const values = cardValues[system] || cardValues['Hi-Lo'];
+            
+            referenceDiv.innerHTML = Object.entries(values)
+                .map(([cards, value]) => 
+                    `<div style="display: flex; justify-content: space-between; margin: 0.5rem 0;">
+                        <span>${cards}:</span>
+                        <span style="color: #ffd700; font-weight: bold;">${value}</span>
+                    </div>`
+                ).join('');
+        }
+
+        // Tab navigation function
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => button.classList.remove('active'));
+            
+            // Show selected tab
+            const selectedTab = document.getElementById(tabName + '-tab');
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+            
+            // Add active class to clicked button
+            const selectedButton = document.querySelector(`[onclick="showTab('${tabName}')"]`);
+            if (selectedButton) {
+                selectedButton.classList.add('active');
+            }
+            
+            // Load content based on tab
+            if (tabName === 'analytics') {
+                loadAnalytics();
+            } else if (tabName === 'counting') {
+                updateCardValuesReference();
+            } else if (tabName === 'strategy') {
+                loadStrategyChart();
+            }
+        }
+
+        // Count guessing functionality
+        function checkCountGuess() {
+            const userGuess = parseInt(document.getElementById('count-guess-input').value);
+            const feedbackDiv = document.getElementById('count-guess-feedback');
+            
+            if (!gameState.session_id) {
+                feedbackDiv.innerHTML = '<span style="color: #ff4444;">Start a game first</span>';
+                return;
+            }
+
+            if (gameState.running_count !== undefined) {
+                const actualCount = gameState.running_count;
+                const isCorrect = userGuess === actualCount;
+                
+                if (isCorrect) {
+                    feedbackDiv.innerHTML = '<span style="color: #00ff88;">✓ Correct!</span>';
+                    document.getElementById('count-display-panel').classList.remove('hidden');
+                    updateCountDisplayInPanel();
+                } else {
+                    feedbackDiv.innerHTML = `<span style="color: #ff4444;">✗ Wrong. Actual: ${actualCount}</span>`;
+                    // Show correct count briefly
+                    document.getElementById('count-display-panel').classList.remove('hidden');
+                    updateCountDisplayInPanel();
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('count-guess-input').value = '';
+                    feedbackDiv.innerHTML = '';
+                }, 3000);
+            } else {
+                feedbackDiv.innerHTML = '<span style="color: #ff4444;">No active game</span>';
+            }
+        }
+
+        // Update count display specifically in the Count Practice panel
+        function updateCountDisplayInPanel() {
+            if (gameState && gameState.running_count !== undefined) {
+                const runningCount = gameState.running_count || 0;
+                const trueCount = gameState.true_count || 0;
+                const deckPenetration = gameState.deck_penetration || 0;
+                const recommendedBet = gameState.betting_recommendation || 10;
+                
+                document.getElementById('running-count').textContent = runningCount;
+                document.getElementById('true-count').textContent = trueCount.toFixed(1);
+                document.getElementById('recommended-bet').textContent = `$${recommendedBet}`;
+                document.getElementById('deck-penetration').textContent = `${deckPenetration.toFixed(1)}%`;
+            }
+        }
+
+        // Enhanced strategy chart loading with deviation highlights
+        async function loadStrategyChart() {
+            const chartTypeEl = document.getElementById('chart-type');
+            const dealerRulesEl = document.getElementById('dealer-rules');
+            
+            if (!chartTypeEl || !dealerRulesEl) {
+                console.error('Strategy chart controls not found');
+                return;
+            }
+            
+            const chartType = chartTypeEl.value;
+            const dealerRules = dealerRulesEl.value;
+            
+            try {
+                const response = await fetch(`/api/strategy_charts?type=${chartType}&dealer_rules=${dealerRules}`);
+                const data = await response.json();
+                
+                displayStrategyCharts(data);
+                
+            } catch (error) {
+                console.error('Error loading strategy charts:', error);
+            }
+        }
+
+        function displayStrategyCharts(data) {
+            const chartsContainer = document.getElementById('strategy-charts-container');
+            if (!chartsContainer) {
+                console.error('Strategy charts container not found');
+                return;
+            }
+            chartsContainer.innerHTML = '';
+            
+            const charts = data.charts;
+            const isDeviations = data.chart_type === 'deviations';
+            
+            // Hard Totals Chart
+            if (charts.hard_totals) {
+                const hardChart = createStrategyTable('Hard Totals', charts.hard_totals, isDeviations);
+                chartsContainer.appendChild(hardChart);
+            }
+            
+            // Soft Totals Chart
+            if (charts.soft_totals) {
+                const softChart = createStrategyTable('Soft Totals', charts.soft_totals, isDeviations);
+                chartsContainer.appendChild(softChart);
+            }
+            
+            // Pairs Chart
+            if (charts.pairs) {
+                const pairsChart = createStrategyTable('Pair Splitting', charts.pairs, isDeviations);
+                chartsContainer.appendChild(pairsChart);
+            }
+            
+            // Surrender Chart
+            if (charts.surrender) {
+                const surrenderChart = createStrategyTable('Late Surrender', charts.surrender, isDeviations);
+                chartsContainer.appendChild(surrenderChart);
+            }
+            
+            // Insurance note for deviations
+            if (isDeviations && charts.insurance) {
+                const insuranceNote = document.createElement('div');
+                insuranceNote.style.cssText = 'margin-top: 2rem; padding: 1rem; background: rgba(255,215,0,0.1); border-radius: 8px; border: 2px solid #ffd700; text-align: center;';
+                insuranceNote.innerHTML = `<strong style="color: #ffd700;">Insurance/Even Money: Take at ${charts.insurance.all}</strong>`;
+                chartsContainer.appendChild(insuranceNote);
+            }
+        }
+
+        function createStrategyTable(title, data, isDeviations) {
+            const container = document.createElement('div');
+            container.style.cssText = 'margin-bottom: 2rem; background: rgba(0,0,0,0.8); border-radius: 10px; padding: 1.5rem; border: 2px solid #ffd700;';
+            
+            const titleEl = document.createElement('h3');
+            titleEl.textContent = title;
+            titleEl.style.cssText = 'color: #ffd700; text-align: center; margin-bottom: 1rem;';
+            container.appendChild(titleEl);
+            
+            const table = document.createElement('table');
+            table.style.cssText = 'width: 100%; border-collapse: collapse; font-family: monospace;';
+            
+            // Create header row
+            const headerRow = document.createElement('tr');
+            const emptyHeader = document.createElement('th');
+            emptyHeader.style.cssText = 'border: 1px solid #ffd700; padding: 8px; background: rgba(255,215,0,0.2); color: #ffd700; font-weight: bold;';
+            headerRow.appendChild(emptyHeader);
+            
+            const dealerCards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'A'];
+            dealerCards.forEach(card => {
+                const th = document.createElement('th');
+                th.textContent = card;
+                th.style.cssText = 'border: 1px solid #ffd700; padding: 8px; background: rgba(255,215,0,0.2); color: #ffd700; font-weight: bold; text-align: center; min-width: 40px;';
+                headerRow.appendChild(th);
+            });
+            table.appendChild(headerRow);
+            
+            // Create data rows
+            Object.entries(data).forEach(([playerHand, actions]) => {
+                const row = document.createElement('tr');
+                
+                const playerCell = document.createElement('td');
+                playerCell.textContent = playerHand;
+                playerCell.style.cssText = 'border: 1px solid #ffd700; padding: 8px; background: rgba(255,215,0,0.2); color: #ffd700; font-weight: bold; text-align: center;';
+                row.appendChild(playerCell);
+                
+                dealerCards.forEach(dealerCard => {
+                    const cell = document.createElement('td');
+                    const action = actions[dealerCard] || '';
+                    cell.textContent = action;
+                    cell.style.cssText = `border: 1px solid #ffd700; padding: 8px; text-align: center; font-weight: bold; ${getActionCellStyle(action, isDeviations)}`;
+                    row.appendChild(cell);
+                });
+                
+                table.appendChild(row);
+            });
+            
+            container.appendChild(table);
+            return container;
+        }
+
+        function getActionCellStyle(action, isDeviations) {
+            if (isDeviations && action) {
+                // Highlight deviation cells with red numbers
+                return 'background: rgba(255,69,69,0.3); color: #ff4555; border: 2px solid #ff4555;';
+            }
+            
+            // Basic strategy color coding
+            switch(action.charAt(0)) {
+                case 'H': return 'background: rgba(255,69,69,0.2); color: #ff4555;';
+                case 'S': return 'background: rgba(255,215,0,0.2); color: #ffd700;';
+                case 'D': return 'background: rgba(0,191,255,0.2); color: #00bfff;';
+                case 'P': 
+                case 'Y': return 'background: rgba(50,205,50,0.2); color: #32cd32;';
+                case 'N': return 'background: rgba(255,69,69,0.2); color: #ff4555;';
+                case 'SUR': return 'background: rgba(138,43,226,0.2); color: #8a2be2;';
+                default: return 'background: rgba(128,128,128,0.1); color: #999;';
+            }
+        }
+
+        // Utility functions
+        function showMessage(message, type) {
+            const messagesDiv = document.getElementById('game-messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            messageEl.textContent = message;
+            
+            messagesDiv.appendChild(messageEl);
+            
+            setTimeout(() => {
+                if (messagesDiv.contains(messageEl)) {
+                    messagesDiv.removeChild(messageEl);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

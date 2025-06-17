@@ -6,12 +6,15 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
 COPY pyproject.toml ./
 RUN pip install --upgrade pip && \
-    pip install streamlit>=1.28.0 \
+    pip install flask>=3.0.0 \
+                flask-socketio>=5.3.0 \
+                flask-cors>=4.0.0 \
                 pandas>=1.5.0 \
                 numpy>=1.24.0 \
                 plotly>=5.15.0 \
@@ -27,14 +30,12 @@ RUN pip install --upgrade pip && \
 # Copy application code
 COPY . .
 
-# Create streamlit config directory
-RUN mkdir -p /app/.streamlit
+# Expose port 8080 for AWS load balancer
+EXPOSE 8080
 
-# Expose port
-EXPOSE 8501
+# Health check for AWS load balancer
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl --fail http://localhost:8080/health || exit 1
 
-# Health check
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
-
-# Run streamlit
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
+# Run Flask application
+CMD ["python", "flask_app.py"]

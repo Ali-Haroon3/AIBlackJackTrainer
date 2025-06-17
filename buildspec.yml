@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - echo Install phase started on `date`
+      - pip install --upgrade pip
+      - pip install -r requirements-aws.txt
+  build:
+    commands:
+      - echo Build phase started on `date`
+      - echo Nothing to build for Flask app
+  post_build:
+    commands:
+      - echo Build completed on `date`
+
+artifacts:
+  files:
+    - '**/*'
+  name: blackjack-app
