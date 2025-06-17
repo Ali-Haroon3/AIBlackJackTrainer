@@ -10,7 +10,7 @@ build:
       - pip install flask-socketio==5.3.6
       - echo "Dependencies installed successfully"
 run:
-  runtime-version: 3.11
+  runtime-version: 3.9
   command: python app.py
   network:
     port: 8000
