@@ -367,7 +367,10 @@ class SimpleGameSession:
             'stats': self.stats
         }
 
-# Global session storage
+# Global session storage.
+# NOTE: this is per-process, in-memory state. Deployments must run gunicorn with
+# a single worker (--workers 1 --threads 8); with >1 worker, requests land on a
+# process that doesn't hold the session and the API returns 404 intermittently.
 sessions = {}
 
 @app.route('/')

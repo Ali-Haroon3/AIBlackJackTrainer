@@ -3,9 +3,12 @@ runtime: python3
 build:
   commands:
     build:
-      - pip install --upgrade pip
-      - pip install flask==3.0.0 flask-cors==4.0.0 flask-socketio==5.3.6
+      - pip3 install --upgrade pip
+      - pip3 install -r requirements.txt
 run:
-  command: python app.py
+  command: gunicorn --bind 0.0.0.0:8000 --workers 1 --threads 8 --timeout 120 --access-logfile - --error-logfile - app:app
   network:
     port: 8000
+  env:
+    - name: PORT
+      value: "8000"

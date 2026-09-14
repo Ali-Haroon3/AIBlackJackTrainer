@@ -12,12 +12,17 @@ This Flask-based blackjack training application is configured for deployment on 
 ## Deployment Files
 
 ### app.py
-Primary entry point that imports and runs the Flask application with production settings.
+Primary entry point. Exposes the WSGI callable as `app:app` for gunicorn;
+running it directly starts Flask's development server on `$PORT` (default 8000).
+
+### apprunner.yaml
+AWS App Runner configuration: installs `requirements.txt` and serves the app
+with gunicorn on port 8000.
 
 ### buildspec.yml
 AWS CodeBuild configuration file that:
 - Sets up Python 3.11 runtime environment
-- Installs Flask dependencies (flask, flask-cors, flask-socketio, gunicorn)
+- Installs dependencies from `requirements.txt`
 - Packages the application for deployment
 
 ### Procfile
@@ -25,10 +30,11 @@ Process file for Heroku-style deployment that configures Gunicorn WSGI server.
 
 ## Dependencies
 The application requires only these core packages:
-- `flask==3.0.0` - Web framework
-- `flask-cors==4.0.0` - Cross-origin resource sharing
-- `flask-socketio==5.3.6` - WebSocket support
-- `gunicorn==21.2.0` - Production WSGI server
+- `flask>=3.0.0` - Web framework
+- `flask-cors>=4.0.0` - Cross-origin resource sharing
+- `gunicorn>=21.2.0` - Production WSGI server
+
+All three live in `requirements.txt`, which every deployment target installs.
 
 ## Features Included
 - Complete blackjack game with AI coaching
@@ -47,7 +53,14 @@ The application requires only these core packages:
 ## Local Testing
 To test locally before deployment:
 ```bash
-python app.py
+pip install -r requirements.txt
+python app.py                  # http://localhost:8000
+```
+
+Or exactly as production runs it:
+
+```bash
+gunicorn --bind 0.0.0.0:8000 app:app
 ```
 
 ## Environment Configuration

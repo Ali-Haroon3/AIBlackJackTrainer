@@ -42,27 +42,26 @@ git clone https://github.com/yourusername/blackjack-ai-training.git
 cd blackjack-ai-training
 
 # Install dependencies
-pip install streamlit pandas numpy plotly scikit-learn pillow requests sqlalchemy psycopg2-binary beautifulsoup4 trafilatura anthropic
+pip install -r requirements.txt
 
 # Run the application
-streamlit run app.py
+python app.py
 ```
 
 ### Step 3: Cloud Deployment Options
 
-#### Option A: Streamlit Cloud (Recommended - Free)
+#### Option A: AWS App Runner (Recommended)
 
-1. **Deploy to Streamlit Cloud:**
-   - Go to https://share.streamlit.io/
-   - Click "New app"
-   - Connect your GitHub repository
-   - Branch: `main`
-   - Main file path: `app.py`
-   - Click "Deploy"
+1. **Deploy to App Runner:**
+   - Go to the AWS App Runner console -> "Create service"
+   - Source: your GitHub repository, branch `main`
+   - Build: "Use a configuration file" (`apprunner.yaml` is committed)
+   - App Runner installs `requirements.txt` and starts
+     `gunicorn --bind 0.0.0.0:8000 app:app` on port 8000
+   - Health check path: `/health`
 
 2. **Environment Variables (if needed):**
-   - In Streamlit Cloud dashboard, go to "Advanced settings"
-   - Add environment variables:
+   - In the service's configuration, add:
      - `ANTHROPIC_API_KEY` (for AI features)
      - `DATABASE_URL` (for PostgreSQL)
 
@@ -85,14 +84,14 @@ railway up
 
 2. **Add a Procfile:**
 ```bash
-echo "web: streamlit run app.py --server.port \$PORT --server.address 0.0.0.0" > Procfile
+echo "web: gunicorn --bind 0.0.0.0:\$PORT app:app" > Procfile   # already committed
 ```
 
 #### Option C: Heroku
 
 1. **Create Procfile:**
 ```bash
-echo "web: streamlit run app.py --server.port \$PORT --server.address 0.0.0.0" > Procfile
+echo "web: gunicorn --bind 0.0.0.0:\$PORT app:app" > Procfile   # already committed
 ```
 
 2. **Deploy to Heroku:**
@@ -107,16 +106,16 @@ git push heroku main
 
 1. **Create Dockerfile:**
 ```dockerfile
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 WORKDIR /app
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
-RUN pip install -r requirements.txt
+EXPOSE 8000
 
-EXPOSE 8080
-
-CMD streamlit run app.py --server.port 8080 --server.address 0.0.0.0
+CMD ["sh", "-c", "exec gunicorn --bind 0.0.0.0:${PORT:-8000} app:app"]
 ```
 
 2. **Deploy:**
@@ -140,12 +139,12 @@ For full functionality, set these environment variables:
 
 **Local development:**
 ```bash
-streamlit run app.py
+python app.py
 ```
 
 **Production (with custom port):**
 ```bash
-streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+PORT=8080 gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 120 app:app
 ```
 
 ### Step 6: Updating the Application
@@ -164,7 +163,7 @@ git push origin main
 **Common Issues:**
 
 1. **Port conflicts:**
-   - Change port in `.streamlit/config.toml` or use `--server.port` flag
+   - Set the `PORT` environment variable (defaults to 8000)
 
 2. **Missing dependencies:**
    - Check that all packages are installed: `pip install -r requirements.txt`
@@ -186,9 +185,14 @@ blackjack-ai-training/
 ├── .gitignore
 ├── setup.py
 ├── DEPLOYMENT.md
-├── .streamlit/
-│   └── config.toml
+├── Dockerfile
+├── Procfile
+├── apprunner.yaml
+├── requirements.txt
 ├── app.py
+├── simple_complete_app.py
+├── templates/
+│   └── complete_app.html
 ├── game_engine.py
 ├── enhanced_ai_coach.py
 ├── bja_strategy.py

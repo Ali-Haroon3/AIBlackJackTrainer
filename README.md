@@ -33,11 +33,11 @@ A comprehensive Python-based blackjack training application with AI coaching, ca
     ```
 3. **Run the application**
     ```
-    python -m streamlit run app.py             # add --server.port 8501 if needed
+    python app.py                              # set PORT=8080 to change the port
     ```
-4. **Access the application** — visit `http://localhost:8501` in your browser.
+4. **Access the application** — visit `http://localhost:8000` in your browser.
 
-4. **Access the application** — visit `http://localhost:8501` in your browser.
+4. **Access the application** — visit `http://localhost:8000` in your browser.
 
 ## Configuration
 
@@ -116,18 +116,26 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - Card graphics courtesy of [nicubunu.ro](https://nicubunu.ro/graphics/playingcards/simple/)
 - Basic strategy charts based on Blackjack Apprenticeship standards
-- Built with Streamlit, scikit-learn, and PostgreSQL
+- Built with Flask, scikit-learn, and PostgreSQL
 
 ## Deployment
 
 ### Local Development
 ```bash
-streamlit run app.py --server.port 8501
+python app.py                 # development server on http://localhost:8000
 ```
+
+### Production
+```bash
+gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 120 app:app
+```
+
+The WSGI entry point is `app:app`. A `/health` endpoint returns
+`{"status": "healthy"}` for load-balancer health checks.
 
 ### Production Deployment
 The application is configured for deployment on platforms like:
-- Streamlit Cloud
+- AWS App Runner (`apprunner.yaml`)
 - Heroku
 - Railway
 - Google Cloud Run
